@@ -1,0 +1,318 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新年会ドリンク精算・提出</title>
+    <style>
+        /* Base Styles */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; background-color: #f8f9fa; margin: 0; padding-bottom: 160px; color: #333; }
+        header { background-color: #2c3e50; color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h1 { margin: 0; font-size: 1.1rem; }
+        .status-bar { font-size: 0.85rem; margin-top: 8px; opacity: 0.9; }
+
+        /* Login Section */
+        .login-section { background: #fff; padding: 15px; margin: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-left: 5px solid #e67e22; }
+        .login-label { font-weight: bold; margin-bottom: 8px; display: block; }
+        select { width: 100%; padding: 10px; font-size: 1rem; border: 1px solid #ccc; border-radius: 5px; background: white; }
+
+        /* Tabs */
+        .tabs-container { background: #fff; position: sticky; top: 78px; z-index: 900; overflow-x: auto; white-space: nowrap; padding: 0 5px; border-bottom: 1px solid #ddd; }
+        .tab { display: inline-block; padding: 12px 15px; font-size: 0.9rem; font-weight: bold; color: #7f8c8d; cursor: pointer; border-bottom: 3px solid transparent; }
+        .tab.active { color: #27ae60; border-bottom-color: #27ae60; }
+
+        /* Content */
+        .container { max-width: 600px; margin: 0 auto; padding: 10px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .sub-category { font-size: 0.85rem; color: #666; margin: 15px 0 5px 5px; font-weight: bold; border-left: 4px solid #ddd; padding-left: 8px; }
+        
+        /* Menu Item */
+        .menu-item { background: white; border-radius: 10px; padding: 12px 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; }
+        .item-info { flex: 1; }
+        .item-name { font-weight: bold; font-size: 0.95rem; display: block; }
+        .item-price-tag { font-size: 0.9rem; background-color: #ecf0f1; padding: 2px 6px; border-radius: 4px; margin-left: 5px; font-weight: normal; color: #2c3e50; }
+        
+        /* Controls */
+        .controls { display: flex; align-items: center; gap: 8px; }
+        .btn { width: 32px; height: 32px; border-radius: 50%; border: none; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; }
+        .btn-minus { background-color: #ecf0f1; color: #7f8c8d; }
+        .btn-plus { background-color: #27ae60; color: white; }
+        .count { font-weight: bold; font-size: 1.1rem; min-width: 24px; text-align: center; }
+        .count.active { color: #27ae60; }
+
+        /* Footer Result */
+        .footer-result { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #e0e0e0; padding: 15px 0 20px; box-shadow: 0 -4px 15px rgba(0,0,0,0.08); z-index: 1100; }
+        .result-container { max-width: 600px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
+        .final-status { text-align: right; }
+        .final-amount { font-size: 1.3rem; font-weight: bold; }
+        .refund { color: #2980b9; }
+        .pay { color: #c0392b; }
+        
+        /* Submit Button */
+        .submit-btn {
+            display: block; width: 100%; max-width: 600px; margin: 10px auto 0;
+            background-color: #2c3e50; color: white; border: none; padding: 12px;
+            font-size: 1rem; font-weight: bold; border-radius: 8px; cursor: pointer;
+        }
+        
+        /* Loading */
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 2000; display: flex; justify-content: center; align-items: center; flex-direction: column; display: none; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #27ae60; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 10px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div id="loading-overlay">
+    <div class="spinner"></div>
+    <div id="loading-text">読み込み中...</div>
+</div>
+
+<header>
+    <h1>新年会ドリンク精算</h1>
+    <div class="status-bar">デポジット済：10,000円<br>(食事7,000円 + <b>充当3,000円</b>)</div>
+</header>
+
+<div class="container">
+    <div class="login-section">
+        <label class="login-label">① あなたの名前を選択してください</label>
+        <select id="user-select">
+            <option value="">読み込み中...</option>
+        </select>
+    </div>
+</div>
+
+<div class="tabs-container" id="tabs-nav"></div>
+<div class="container" id="menu-container"></div>
+
+<div class="footer-result">
+    <div class="result-container">
+        <div>
+            <div style="font-size:0.8rem; color:#666;">現在飲んだ分</div>
+            <div style="font-size:1.1rem; font-weight:bold;">¥<span id="current-total">0</span></div>
+        </div>
+        <div class="final-status">
+            <span style="font-size:0.75rem; display:block;" id="status-label">返金受取</span>
+            <span class="final-amount refund" id="final-result">3,000円</span>
+        </div>
+    </div>
+    <div style="padding: 0 20px;">
+        <button id="submit-btn" class="submit-btn" onclick="submitData()">精算結果を送信する</button>
+    </div>
+</div>
+
+<script>
+    // ▼▼▼ 手順2で新しく発行したURLに書き換えてください ▼▼▼
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyGLydO-1NZ4wjiLhfh9T6PijyivXweNoRZOrDuQlEQjB-esWTP-YMMpOc7jmzjiL-TYw/exec"; 
+    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+    const menuData = [
+        { tabName: "カイピリーニャ", groups: [
+            { label: "Standard", items: [{name:"カイピリーニャ", price:1100},{name:"プレミアム", price:1400},{name:"泡盛カイピリーニャ", price:1100}] },
+            { label: "Fruit", items: [{name:"パイン&ジンジャー", price:1400},{name:"トマト&ハラペーニョ", price:1400},{name:"マラクジャ", price:1600},{name:"トロピカル", price:1700},{name:"ミックスベリー", price:1800}] }
+        ]},
+        { tabName: "ビール/サワー", groups: [
+            { label: "Beer", items: [{name:"生ハートランド", price:980},{name:"コロナ", price:990},{name:"ギネス", price:990},{name:"ブラジルビール", price:1600},{name:"グリーンズフリー", price:700}] },
+            { label: "Highball & Sour", items: [{name:"ニッカハイボール", price:1200},{name:"富士ハイボール", price:1200},{name:"山崎12年", price:2500},{name:"レモンサワー", price:850},{name:"マラクジャサワー", price:900},{name:"マテ茶ハイ", price:850}] }
+        ]},
+        { tabName: "ワイン/他", groups: [
+            { label: "Wine", items: [{name:"スパークリング", price:1300},{name:"白ワイン", price:1300},{name:"赤ワイン", price:1300}] },
+            { label: "Cocktails", items: [{name:"カシャーサトニック", price:900},{name:"バッチーダデココ", price:1500},{name:"バッチーダデマラクジャ", price:1500}] }
+        ]},
+        { tabName: "ノンアル", groups: [
+            { label: "Mocktails", items: [{name:"フォーシーズンズ", price:1200},{name:"メアリーピックフォード", price:1200},{name:"オリジナル", price:1200}] },
+            { label: "Soft Drink", items: [{name:"ジュース各種", price:700},{name:"マラクジャ/アサイー", price:750},{name:"伊良コーラ", price:900},{name:"富士ミネラル", price:900},{name:"スパークリング水", price:1000},{name:"ペリエ", price:600},{name:"カフェ/紅茶", price:550},{name:"カフェラテ", price:650}] }
+        ]}
+    ];
+
+    const PREPAID_DRINK_BUDGET = 3000;
+    const cart = {};
+    let globalTotal = 0;
+    let globalBalance = -3000;
+
+    // --- Init ---
+    window.onload = async function() {
+        renderTabs();
+        renderContent();
+        switchTab(0);
+        await fetchNames();
+    };
+
+    // --- GAS Connection ---
+    async function fetchNames() {
+        const overlay = document.getElementById('loading-overlay');
+        const select = document.getElementById('user-select');
+        overlay.style.display = 'flex';
+        
+        try {
+            const response = await fetch(GAS_API_URL);
+            const names = await response.json();
+            
+            select.innerHTML = '<option value="">▼ 名前を選択してください</option>';
+            names.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                select.appendChild(opt);
+            });
+            overlay.style.display = 'none';
+        } catch (e) {
+            console.error(e);
+            overlay.style.display = 'none';
+            select.innerHTML = '<option value="">(テスト用: 名前取得失敗)</option>';
+            const testOpt = document.createElement('option');
+            testOpt.value = "テスト太郎";
+            testOpt.textContent = "テスト太郎(接続エラー時)";
+            select.appendChild(testOpt);
+        }
+    }
+
+    async function submitData() {
+        const name = document.getElementById('user-select').value;
+        if (!name) {
+            alert("名前を選択してください！");
+            return;
+        }
+
+        // 注文詳細リストを作成
+        let detailsList = [];
+        for (const key in cart) {
+            if (cart[key].count > 0) {
+                // 表示形式: "ビール(¥980) x 2" または "ビール(¥980)"
+                let itemStr = `${cart[key].name}(¥${cart[key].price})`;
+                if (cart[key].count > 1) {
+                    itemStr += ` x${cart[key].count}`;
+                }
+                detailsList.push(itemStr);
+            }
+        }
+        const orderDetailsString = detailsList.join(", ");
+
+        if(!confirm(`${name}さん\n\n注文内容:\n${orderDetailsString || "(なし)"}\n\nドリンク合計: ${globalTotal.toLocaleString()}円\n精算額: ${document.getElementById('final-result').textContent}\n\nこの内容で送信しますか？`)) return;
+
+        const overlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
+        overlay.style.display = 'flex';
+        loadingText.textContent = "送信中...";
+
+        // Send Data
+        const payload = {
+            name: name,
+            details: orderDetailsString, // 詳細データを追加
+            total: globalTotal,
+            balance: globalBalance
+        };
+
+        try {
+            await fetch(GAS_API_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            alert("送信完了しました！");
+            overlay.style.display = 'none';
+        } catch (e) {
+            alert("送信に失敗しました。");
+            overlay.style.display = 'none';
+        }
+    }
+
+    // --- UI Logic ---
+    function renderTabs() {
+        const nav = document.getElementById('tabs-nav');
+        menuData.forEach((d, i) => {
+            const btn = document.createElement('div');
+            btn.className = 'tab';
+            btn.textContent = d.tabName;
+            btn.onclick = () => switchTab(i);
+            btn.id = `tab-btn-${i}`;
+            nav.appendChild(btn);
+        });
+    }
+
+    function renderContent() {
+        const container = document.getElementById('menu-container');
+        menuData.forEach((d, i) => {
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'tab-content';
+            contentDiv.id = `content-${i}`;
+
+            d.groups.forEach(g => {
+                const subTitle = document.createElement('div');
+                subTitle.className = 'sub-category';
+                subTitle.textContent = g.label;
+                contentDiv.appendChild(subTitle);
+
+                g.items.forEach((item, idx) => {
+                    const id = `t${i}-${g.label}-${idx}`;
+                    // カートに名前を保持させる
+                    cart[id] = { name: item.name, price: item.price, count: 0 }; 
+
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'menu-item';
+                    itemDiv.innerHTML = `
+                        <div class="item-info">
+                            <span class="item-name">
+                                ${item.name}
+                                <span class="item-price-tag">¥${item.price.toLocaleString()}</span>
+                            </span>
+                        </div>
+                        <div class="controls">
+                            <button class="btn btn-minus" onclick="upd('${id}', -1)">-</button>
+                            <span class="count" id="cnt-${id}">0</span>
+                            <button class="btn btn-plus" onclick="upd('${id}', 1)">+</button>
+                        </div>
+                    `;
+                    contentDiv.appendChild(itemDiv);
+                });
+            });
+            container.appendChild(contentDiv);
+        });
+    }
+
+    function switchTab(idx) {
+        document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+        document.getElementById(`tab-btn-${idx}`).classList.add('active');
+        document.getElementById(`content-${idx}`).classList.add('active');
+        document.getElementById(`tab-btn-${idx}`).scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+
+    function upd(id, chg) {
+        if (cart[id].count + chg < 0) return;
+        cart[id].count += chg;
+        const cntEl = document.getElementById(`cnt-${id}`);
+        cntEl.textContent = cart[id].count;
+        if(cart[id].count > 0) cntEl.classList.add('active');
+        else cntEl.classList.remove('active');
+        calc();
+    }
+
+    function calc() {
+        globalTotal = 0;
+        for (let k in cart) {
+            globalTotal += cart[k].price * cart[k].count;
+        }
+        globalBalance = globalTotal - PREPAID_DRINK_BUDGET;
+
+        document.getElementById('current-total').textContent = globalTotal.toLocaleString();
+        const lbl = document.getElementById('status-label');
+        const res = document.getElementById('final-result');
+
+        if (globalBalance > 0) {
+            lbl.textContent = "追加支払い (あなた→幹事)";
+            res.textContent = `+${globalBalance.toLocaleString()}円`;
+            res.className = "final-amount pay";
+        } else {
+            lbl.textContent = "返金受取 (幹事→あなた)";
+            res.textContent = `${Math.abs(globalBalance).toLocaleString()}円`;
+            res.className = "final-amount refund";
+        }
+    }
+</script>
+
+</body>
+</html>
