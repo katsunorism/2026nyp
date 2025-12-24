@@ -13,7 +13,6 @@
         .login-section { padding: 10px 15px; border-bottom: 1px solid #eee; }
         .login-label { font-size: 0.8rem; font-weight: bold; margin-bottom: 5px; display: block; color: #e67e22; }
         select { width: 100%; padding: 8px; font-size: 1rem; border: 1px solid #ccc; border-radius: 5px; background: white; }
-        /* グレーアウトされた選択肢のスタイル（ブラウザにより制限あり） */
         option:disabled { color: #ccc; font-style: italic; }
 
         .tabs-container { overflow-x: auto; white-space: nowrap; padding: 0 5px; border-bottom: 1px solid #ddd; background: #fff; }
@@ -153,18 +152,23 @@
             const response = await fetch(GAS_API_URL);
             userMasterData = await response.json();
             select.innerHTML = '<option value="">▼ 名前を選択してください</option>';
-            userMasterData.forEach(user => {
+            
+            // ★ 未精算の人と精算済みの人を分けて、未精算を上に持ってくる
+            const activeUsers = userMasterData.filter(u => u.status !== "精算完了");
+            const settledUsers = userMasterData.filter(u => u.status === "精算完了");
+
+            const sortedUsers = [...activeUsers, ...settledUsers];
+
+            sortedUsers.forEach(user => {
                 const opt = document.createElement('option');
                 opt.value = user.name;
                 
-                // ★ 修正ポイント：精算済みは disabled にする
                 if (user.status === "精算完了") {
                     opt.textContent = user.name + " (※精算済)";
                     opt.disabled = true;
                 } else {
                     opt.textContent = user.name + (user.isUnlimited ? " 【飲み放題】" : "");
                 }
-                
                 select.appendChild(opt);
             });
             overlay.style.display = 'none';
@@ -178,7 +182,6 @@
         const name = document.getElementById('user-select').value;
         const user = userMasterData.find(u => u.name === name);
         
-        // 全リセット
         document.getElementById('scroll-area').classList.remove('locked');
         document.getElementById('header-area').classList.remove('locked');
         document.getElementById('menu-container').style.display = 'block';
@@ -193,7 +196,6 @@
 
         if (!user) return;
 
-        // JS側でのガードも維持
         if (user.status === "精算完了") {
             alert("この方は既に精算が完了しています。");
             document.getElementById('scroll-area').classList.add('locked');
@@ -268,7 +270,22 @@
 
     async function settleComplete() {
         const name = document.getElementById('user-select').value;
-        const msg = isCurrentUnlimited ? "会費11,500円を受け取りましたか？" : "精算完了を記録しますか？";
+        let msg = "";
+
+        // ★ 動的な確認メッセージの作成
+        if (isCurrentUnlimited) {
+            msg = "会費11,500円を受け取りましたか？";
+        } else {
+            const absBalance = Math.abs(globalBalance).toLocaleString();
+            if (globalBalance > 0) {
+                msg = `${absBalance}円をお支払いいただきましたか？`;
+            } else if (globalBalance < 0) {
+                msg = `${absBalance}円の返金を受けましたか？`;
+            } else {
+                msg = "差額0円。精算完了を記録しますか？";
+            }
+        }
+
         if(!confirm(msg)) return;
         
         showLoading("更新中...");
