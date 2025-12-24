@@ -60,7 +60,7 @@
     <div class="tabs-container" id="tabs-nav" style="display:none;"></div>
 </div>
 
-<div class="scrollable-content">
+<div class="scrollable-content" id="scroll-area">
     <div id="unlimited-panel" style="display:none; text-align:center; padding:40px 20px;">
         <h2 style="color:#27ae60;">飲み放題プラン</h2>
         <p style="color:#666;">会費：11,500円を支払い後、<br>下の「精算する」ボタンを押してください。</p>
@@ -270,11 +270,15 @@
         }
     }
 
+    // タブ切り替え時にスクロールを最上部へ移動
     function switchTab(idx) {
         document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
         document.getElementById(`tab-btn-${idx}`).classList.add('active');
         document.getElementById(`content-${idx}`).classList.add('active');
+        
+        // 追加：スクロールエリアを最上部へ戻す
+        document.getElementById('scroll-area').scrollTop = 0;
     }
 
     function upd(id, chg) {
