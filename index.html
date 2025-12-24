@@ -23,13 +23,12 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         
-        .sub-category { font-size: 0.8rem; color: #27ae60; margin: 15px 0 8px 5px; font-weight: bold; border-left: 4px solid #e67e22; padding-left: 8px; }
+        .sub-category { font-size: 0.85rem; color: #27ae60; margin: 20px 0 10px 5px; font-weight: bold; border-left: 4px solid #e67e22; padding-left: 8px; }
         .menu-item { background: white; border-radius: 12px; padding: 12px 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         
-        /* 金額を2行目にするためのスタイル */
-        .item-info { display: flex; flex-direction: column; }
-        .item-name { font-weight: bold; font-size: 0.95rem; }
-        .item-price { font-size: 0.8rem; color: #7f8c8d; margin-top: 2px; }
+        .item-info { display: flex; flex-direction: column; max-width: 65%; }
+        .item-name { font-weight: bold; font-size: 0.9rem; line-height: 1.3; }
+        .item-price { font-size: 0.85rem; color: #7f8c8d; margin-top: 4px; }
 
         .controls { display: flex; align-items: center; gap: 12px; }
         .btn { width: 32px; height: 32px; border-radius: 50%; border: none; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer; }
@@ -88,20 +87,83 @@
 
     const rawMenu = [
         { tabName: "カイピリーニャ", groups: [
-            { label: "Standard", items: [{name:"カイピリーニャ", price:1100},{name:"プレミアム", price:1400},{name:"泡盛カイピリーニャ", price:1100}] },
-            { label: "Fruit", items: [{name:"パイン&ジンジャー", price:1400},{name:"トマト&ハラペーニョ", price:1400},{name:"マラクジャ", price:1600},{name:"トロピカル", price:1700},{name:"ミックスベリー", price:1800}] }
+            { label: "Caipirinha", items: [
+                {name:"カイピリーニャ", price:1100},
+                {name:"プレミアム カイピリーニャ", price:1400},
+                {name:"泡盛カイピリーニャ", price:1100}
+            ]},
+            { label: "Fruit Caipirinha", items: [
+                {name:"パイン&ジンジャー カイピリーニャ", price:1400},
+                {name:"トマト&ハラペーニョ カイピリーニャ", price:1400},
+                {name:"マラクジャ カイピリーニャ", price:1600},
+                {name:"トロピカル カイピリーニャ", price:1700},
+                {name:"ミックスベリー カイピリーニャ", price:1800}
+            ]}
         ]},
         { tabName: "ビール/サワー", groups: [
-            { label: "Beer", items: [{name:"生ハートランド", price:980},{name:"コロナ", price:990},{name:"ギネス", price:990},{name:"ブラジルビール", price:1600},{name:"グリーンズフリー", price:700}] },
-            { label: "Highball & Sour", items: [{name:"ニッカハイボール", price:1200},{name:"富士ハイボール", price:1200},{name:"山崎12年", price:2500},{name:"レモンサワー", price:850},{name:"マラクジャサワー", price:900},{name:"マテ茶ハイ", price:850}] }
+            { label: "Brazilian Beer", items: [
+                {name:"バルテンツァ", price:1600},
+                {name:"リコルディ", price:1600}
+            ]},
+            { label: "Beer", items: [
+                {name:"生ビール(ハートランド)", price:980},
+                {name:"コロナ(メキシコ)", price:990},
+                {name:"ギネス", price:990},
+                {name:"キリン グリーンズフリー", price:700}
+            ]},
+            { label: "High Ball & Sour", items: [
+                {name:"ニッカ フロンティアハイボール", price:1200},
+                {name:"富士ハイボール", price:1200},
+                {name:"山崎12年 ハイボール", price:2500},
+                {name:"レモンサワー", price:850},
+                {name:"マラクジャサワー", price:900},
+                {name:"マテ茶ハイ", price:850}
+            ]}
         ]},
         { tabName: "ワイン/他", groups: [
-            { label: "Wine", items: [{name:"スパークリング", price:1300},{name:"白ワイン", price:1300},{name:"赤ワイン", price:1300}] },
-            { label: "Cocktails", items: [{name:"カシャーサトニック", price:900},{name:"バッチーダデココ", price:1500},{name:"バッチーダデマラクジャ", price:1500}] }
+            { label: "Wine", items: [
+                {name:"ジュヴェ カンプス カヴァ(泡)", price:1300},
+                {name:"エラスリス ソーヴィニヨン ブラン(白)", price:1300},
+                {name:"ベティッグ ヴィーノデリージョン シャルドネ(白)", price:1300},
+                {name:"クロデフ ピノノワール(赤)", price:1300},
+                {name:"プレンタ ラフロール マルベック(赤)", price:1300},
+                {name:"ベティッグ ヴィーノ カベルネソーヴィニヨン(赤)", price:1300}
+            ]},
+            { label: "Brazilian Cocktails", items: [
+                {name:"カシャーサトニック", price:900},
+                {name:"バッチーダデココ", price:1500},
+                {name:"バッチーダデマラクジャ", price:1500}
+            ]}
         ]},
-        { tabName: "ノンアル", groups: [
-            { label: "Mocktails", items: [{name:"フォーシーズンズ", price:1200},{name:"メアリーピックフォード", price:1200},{name:"オリジナル", price:1200}] },
-            { label: "Soft Drink", items: [{name:"ジュース各種", price:700},{name:"マラクジャ/アサイー", price:750},{name:"伊良コーラ", price:900},{name:"富士ミネラル", price:900},{name:"ペリエ", price:600},{name:"カフェ/紅茶", price:550},{name:"カフェラテ", price:650}] }
+        { tabName: "ノンアル/cafe", groups: [
+            { label: "Mocktails", items: [
+                {name:"フォーシーズンズ カクテル", price:1200},
+                {name:"メアリーピックフォード", price:1200},
+                {name:"オリジナル トロピカルフルーツ", price:1200}
+            ]},
+            { label: "Soft Drink", items: [
+                {name:"ガラナ アンタルチカ", price:700},
+                {name:"オレンジジュース", price:750},
+                {name:"マンゴージュース", price:700},
+                {name:"マラクジャジュース", price:750},
+                {name:"アサイ&バナナジュース", price:750},
+                {name:"グァヴァジュース", price:700},
+                {name:"カシュージュース", price:700},
+                {name:"マテ茶", price:700},
+                {name:"伊良コーラ", price:900},
+                {name:"黄金しょうがのジンジャーエール", price:900},
+                {name:"富士ミネラルウォーター", price:900},
+                {name:"富士プレミアムスパークリング", price:1000},
+                {name:"ペリエ", price:600}
+            ]},
+            { label: "Tea & Coffee", items: [
+                {name:"ブレンドティー", price:550},
+                {name:"コーヒー", price:550},
+                {name:"カフェラテ", price:650},
+                {name:"カプチーノ", price:650},
+                {name:"エスプレッソ", price:550},
+                {name:"ダブルエスプレッソ", price:800}
+            ]}
         ]}
     ];
 
@@ -193,13 +255,12 @@
         document.getElementById('tabs-nav').style.display = isUnlimited ? 'none' : 'flex';
         document.getElementById('footer-area').style.display = 'block';
 
-        // 飲み放題ユーザーの場合、修正ボタン(edit-btn)を非表示にする
         if (isUnlimited) {
             document.getElementById('price-display-area').style.display = 'none';
             document.getElementById('submit-btn').style.display = 'none';
             document.getElementById('post-submit-controls').style.display = 'flex';
-            document.getElementById('edit-btn').style.display = 'none'; // 修正ボタンを消す
-            document.getElementById('settle-btn').style.width = '100%'; // 精算ボタンを全幅に
+            document.getElementById('edit-btn').style.display = 'none';
+            document.getElementById('settle-btn').style.width = '100%';
         } else {
             document.getElementById('price-display-area').style.display = 'flex';
             document.getElementById('submit-btn').style.display = 'block';
