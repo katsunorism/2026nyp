@@ -4,52 +4,56 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>2026新年会in大阪 会費精算</title>
-    <style>
-        html, body { height: 100%; margin: 0; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; background-color: #f8f9fa; color: #333; }
-        .fixed-header { position: fixed; top: 0; left: 0; width: 100%; background: white; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        header { background-color: #2c3e50; color: white; padding: 12px; text-align: center; }
-        h1 { margin: 0; font-size: 1rem; }
-        .status-bar { font-size: 0.8rem; margin-top: 4px; opacity: 0.9; min-height: 1.2em; }
-        .login-section { padding: 10px 15px; border-bottom: 1px solid #eee; }
-        .login-label { font-size: 0.8rem; font-weight: bold; margin-bottom: 5px; display: block; color: #e67e22; }
-        select { width: 100%; padding: 8px; font-size: 1rem; border: 1px solid #ccc; border-radius: 5px; background: white; }
-        option:disabled { color: #ccc; font-style: italic; }
+    
+    <link rel="icon" href="https://drive.google.com/uc?export=view&id=1TybDSeqecErsvdMuwUfjhPmaQilxC7PG">
 
-        .tabs-container { overflow-x: auto; white-space: nowrap; padding: 0 5px; border-bottom: 1px solid #ddd; background: #fff; }
-        .tab { display: inline-block; padding: 12px 15px; font-size: 0.9rem; font-weight: bold; color: #7f8c8d; cursor: pointer; border-bottom: 3px solid transparent; }
+    <style>
+        html, body { height: 100%; margin: 0; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f4f7f6; color: #333; }
+        .fixed-header { position: fixed; top: 0; left: 0; width: 100%; background: white; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        header { background-color: #27ae60; color: white; padding: 12px; text-align: center; }
+        h1 { margin: 0; font-size: 1rem; }
+        .status-bar { font-size: 0.75rem; margin-top: 4px; opacity: 0.9; }
+        .login-section { padding: 10px 15px; border-bottom: 1px solid #eee; }
+        .login-label { font-size: 0.75rem; font-weight: bold; margin-bottom: 5px; display: block; color: #27ae60; }
+        select { width: 100%; padding: 10px; font-size: 1rem; border: 1px solid #ddd; border-radius: 8px; background: #fff; appearance: none; }
+
+        .tabs-container { overflow-x: auto; white-space: nowrap; border-bottom: 1px solid #ddd; background: #fff; }
+        .tab { display: inline-block; padding: 12px 18px; font-size: 0.85rem; font-weight: bold; color: #95a5a6; cursor: pointer; border-bottom: 3px solid transparent; }
         .tab.active { color: #27ae60; border-bottom-color: #27ae60; }
-        .scrollable-content { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: 185px; padding-bottom: 220px; box-sizing: border-box; transition: opacity 0.3s; }
+
+        .scrollable-content { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: 185px; padding-bottom: 180px; box-sizing: border-box; }
         .container { max-width: 600px; margin: 0 auto; padding: 10px; }
-        .locked { opacity: 0.5; pointer-events: none; filter: grayscale(0.5); }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .sub-category { font-size: 0.85rem; color: #666; margin: 15px 0 5px 5px; font-weight: bold; border-left: 4px solid #ddd; padding-left: 8px; }
-        .menu-item { background: white; border-radius: 10px; padding: 12px 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; }
-        .item-info { flex: 1; }
-        .item-name { font-weight: bold; font-size: 0.95rem; }
-        .item-price-tag { font-size: 0.85rem; background-color: #ecf0f1; padding: 2px 6px; border-radius: 4px; margin-left: 5px; color: #2c3e50; }
-        .controls { display: flex; align-items: center; gap: 10px; }
-        .btn { width: 34px; height: 34px; border-radius: 50%; border: none; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .btn-minus { background-color: #ecf0f1; color: #7f8c8d; }
-        .btn-plus { background-color: #27ae60; color: white; }
-        .count { font-weight: bold; font-size: 1.1rem; min-width: 20px; text-align: center; }
-        .count.active { color: #27ae60; }
-        .footer-result { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #e0e0e0; padding: 15px 0 25px; box-shadow: 0 -4px 15px rgba(0,0,0,0.08); z-index: 1000; }
+        .locked { opacity: 0.5; pointer-events: none; filter: grayscale(1); }
+
+        .sub-category { font-size: 0.8rem; color: #7f8c8d; margin: 15px 0 8px 5px; font-weight: bold; border-left: 3px solid #27ae60; padding-left: 8px; }
+        .menu-item { background: white; border-radius: 12px; padding: 12px 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .item-name { font-weight: bold; font-size: 0.9rem; }
+        .item-price { font-size: 0.8rem; color: #7f8c8d; margin-left: 5px; }
+        .controls { display: flex; align-items: center; gap: 12px; }
+        .btn { width: 32px; height: 32px; border-radius: 50%; border: none; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .btn-minus { background: #f0f0f0; color: #999; }
+        .btn-plus { background: #27ae60; color: white; }
+        .count { font-weight: bold; width: 20px; text-align: center; }
+
+        #unlimited-panel { display: none; background: #e8f5e9; border: 2px dashed #27ae60; border-radius: 15px; padding: 30px 20px; margin: 20px; text-align: center; }
+
+        .footer-result { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #eee; padding: 15px 0 30px; box-shadow: 0 -4px 10px rgba(0,0,0,0.05); z-index: 1000; }
         .result-container { max-width: 600px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
-        .final-amount { font-size: 1.3rem; font-weight: bold; }
+        .final-amount { font-size: 1.4rem; font-weight: bold; }
         .refund { color: #2980b9; }
-        .pay { color: #c0392b; }
-        .submit-btn { display: block; width: 90%; max-width: 560px; margin: 10px auto 0; background-color: #2c3e50; color: white; border: none; padding: 12px; font-size: 1rem; font-weight: bold; border-radius: 8px; cursor: pointer; }
-        #post-submit-controls { margin-top: 12px; padding: 0 20px; }
-        .secondary-btn { flex: 1; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 0.9rem; cursor: pointer; border: none; }
-        .btn-edit { background-color: #f39c12; color: white; } 
-        .btn-complete { background-color: #27ae60; color: white; }
+        .pay { color: #e74c3c; }
+        .submit-btn { display: block; width: 90%; margin: 12px auto 0; background: #2c3e50; color: white; border: none; padding: 14px; font-size: 1rem; font-weight: bold; border-radius: 10px; }
+        
+        .post-controls { display: none; gap: 10px; padding: 0 20px; max-width: 560px; margin: 12px auto 0; }
+        .secondary-btn { flex: 1; padding: 14px; border-radius: 10px; font-weight: bold; border: none; font-size: 0.9rem; }
+        .btn-edit { background: #f39c12; color: white; }
+        .btn-complete { background: #27ae60; color: white; }
+
         #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; }
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #27ae60; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 10px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        #unlimited-panel { display: none; background: #fff8e1; border: 2px dashed #ffc107; border-radius: 15px; padding: 30px 20px; margin: 20px; text-align: center; }
-        .plan-badge { background: #ffc107; color: #000; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; margin-bottom: 10px; display: inline-block; }
     </style>
 </head>
 <body>
@@ -75,37 +79,36 @@
 
 <div class="scrollable-content" id="scroll-area">
     <div id="unlimited-panel">
-        <span class="plan-badge">飲み放題プラン</span>
-        <h2 style="margin: 10px 0;">会費：11,500円</h2>
-        <p style="font-size: 0.9rem; color: #666;">主催者に会費を支払い後、下の「精算完了」ボタンを押してください。</p>
+        <span style="background:#27ae60; color:white; padding:4px 12px; border-radius:20px; font-size:0.7rem;">飲み放題プラン</span>
+        <h2 style="margin:10px 0;">会費：11,500円</h2>
+        <p style="font-size:0.8rem; color:#666;">主催者へ支払い後、「精算完了」を押してください。</p>
     </div>
     <div class="container" id="menu-container"></div>
 </div>
 
-<div class="footer-result" id="footer-area">
+<div class="footer-result">
     <div class="result-container" id="price-summary">
         <div>
-            <div style="font-size:0.75rem; color:#666;">飲んだ合計</div>
+            <div style="font-size:0.7rem; color:#999;">飲んだ合計</div>
             <div style="font-size:1.1rem; font-weight:bold;">¥<span id="current-total">0</span></div>
         </div>
         <div style="text-align:right;">
-            <span style="font-size:0.75rem; display:block;" id="status-label">返金受取</span>
+            <span style="font-size:0.7rem; display:block;" id="status-label">返金受取</span>
             <span class="final-amount refund" id="final-result">2,500円</span>
         </div>
     </div>
     
     <button id="submit-btn" class="submit-btn" onclick="submitData()">注文内容を送信する</button>
     
-    <div id="post-submit-controls" style="display:none;">
-        <div style="display: flex; gap: 10px;">
-            <button id="edit-unlock-btn" onclick="enableEdit()" class="secondary-btn btn-edit">修正する</button>
-            <button id="final-complete-btn" onclick="settleComplete()" class="secondary-btn btn-complete">精算完了</button>
-        </div>
+    <div id="post-submit-controls" class="post-controls">
+        <button onclick="enableEdit()" class="secondary-btn btn-edit">修正</button>
+        <button id="final-btn" onclick="settleComplete()" class="secondary-btn btn-complete">精算完了</button>
     </div>
 </div>
 
 <script>
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxQt1alhF0zQSt7VPtbedBlc33NlDQ-TfF6dP8BwQDzKuINJLwO10CRyiMFZkEOuSyHKw/exec"; 
+    // ★デプロイ後に発行されるご自身の「ウェブアプリのURL」に書き換えてください
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwNpXcqYLfxw8myPud-a6Y0Mc0kkOZT_rNJ2qBQztg-ohVo2oC9TrfvhLCiZSccXnmgXQ/exec"; 
 
     const menuData = [
         { tabName: "カイピリーニャ", groups: [
@@ -126,10 +129,6 @@
         ]}
     ];
 
-    const allItemsGroup = { tabName: "一覧", groups: [] };
-    menuData.forEach(tab => tab.groups.forEach(g => allItemsGroup.groups.push(g)));
-    menuData.push(allItemsGroup);
-
     const PREPAID_DRINK_BUDGET = 2500;
     const cart = {};
     let globalTotal = 0;
@@ -137,7 +136,7 @@
     let userMasterData = [];
     let isCurrentUnlimited = false;
 
-    window.onload = async function() {
+    window.onload = async () => {
         renderTabs();
         renderContent();
         switchTab(0);
@@ -145,168 +144,96 @@
     };
 
     async function fetchNames() {
-        const overlay = document.getElementById('loading-overlay');
-        const select = document.getElementById('user-select');
-        overlay.style.display = 'flex';
+        showLoading("名簿を取得中...");
         try {
-            const response = await fetch(GAS_API_URL);
+            const response = await fetch(GAS_API_URL + "?action=getData");
             userMasterData = await response.json();
+            const select = document.getElementById('user-select');
             select.innerHTML = '<option value="">▼ 名前を選択してください</option>';
             
-            const activeUsers = userMasterData.filter(u => u.status !== "精算完了");
-            const settledUsers = userMasterData.filter(u => u.status === "精算完了");
-            const sortedUsers = [...activeUsers, ...settledUsers];
-
-            sortedUsers.forEach(user => {
+            userMasterData.forEach(user => {
                 const opt = document.createElement('option');
                 opt.value = user.name;
-                
-                if (user.status === "精算完了") {
-                    opt.textContent = user.name + " (※精算済)";
-                    opt.disabled = true;
-                } else {
-                    opt.textContent = user.name + (user.isUnlimited ? " 【飲み放題】" : "");
-                }
+                opt.textContent = user.name + (user.isUnlimited ? "【飲み放題】" : "") + (user.status === "精算完了" ? " (完了済)" : "");
+                if (user.status === "精算完了") opt.disabled = true;
                 select.appendChild(opt);
             });
-            overlay.style.display = 'none';
+            hideLoading();
         } catch (e) {
-            overlay.style.display = 'none';
-            select.innerHTML = '<option value="">(取得失敗)</option>';
-            alert("エラー: 名簿の取得に失敗しました。再読み込みしてください。");
+            hideLoading();
+            alert("名簿の取得に失敗しました。URLを確認してください。");
         }
     }
 
     function checkUserStatus() {
         const name = document.getElementById('user-select').value;
         const user = userMasterData.find(u => u.name === name);
-        
+        if (!user) return;
+
+        resetUI();
+
+        if (user.isUnlimited) {
+            isCurrentUnlimited = true;
+            document.getElementById('tabs-nav').style.display = 'none';
+            document.getElementById('menu-container').style.display = 'none';
+            document.getElementById('unlimited-panel').style.display = 'block';
+            document.getElementById('price-summary').style.display = 'none';
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('post-submit-controls').style.display = 'flex';
+        } else {
+            document.getElementById('budget-info').innerText = "デポジット済：10,000円 (飲食枠：2,500円)";
+        }
+    }
+
+    function resetUI() {
         document.getElementById('scroll-area').classList.remove('locked');
-        document.getElementById('header-area').classList.remove('locked');
-        document.getElementById('menu-container').style.display = 'block';
         document.getElementById('tabs-nav').style.display = 'block';
+        document.getElementById('menu-container').style.display = 'block';
         document.getElementById('unlimited-panel').style.display = 'none';
         document.getElementById('price-summary').style.display = 'flex';
         document.getElementById('submit-btn').style.display = 'block';
         document.getElementById('post-submit-controls').style.display = 'none';
-        document.getElementById('submit-btn').innerText = "注文内容を送信する";
-        document.getElementById('budget-info').innerText = ""; 
         isCurrentUnlimited = false;
-
-        if (!user) return;
-
-        if (user.status === "精算完了") {
-            alert("この方は既に精算が完了しています。");
-            document.getElementById('scroll-area').classList.add('locked');
-            document.getElementById('submit-btn').style.display = 'none';
-            return;
-        }
-
-        if (user.isUnlimited) {
-            isCurrentUnlimited = true;
-            document.getElementById('menu-container').style.display = 'none';
-            document.getElementById('tabs-nav').style.display = 'none';
-            document.getElementById('unlimited-panel').style.display = 'block';
-            document.getElementById('price-summary').style.display = 'none';
-            document.getElementById('budget-info').innerText = "飲み放題プラン：事前精算(11,500円)";
-            document.getElementById('submit-btn').style.display = 'none';
-            document.getElementById('post-submit-controls').style.display = 'block';
-            document.getElementById('edit-unlock-btn').style.display = 'none';
-            document.getElementById('final-complete-btn').innerText = "精算完了（主催者確認）";
-        } else {
-            document.getElementById('budget-info').innerText = "デポジット済：10,000円(※食事代: 7,500円)";
-        }
     }
 
     async function submitData() {
         const name = document.getElementById('user-select').value;
-        if (!name) { alert("名前を選択してください！"); return; }
+        if (!name) return alert("名前を選択してください");
         
-        let detailsList = [];
-        const processedNames = new Set();
-        for (const key in cart) {
-            if (cart[key].count > 0 && !processedNames.has(cart[key].name)) {
-                let itemStr = `${cart[key].name}(¥${cart[key].price})`;
-                if (cart[key].count > 1) itemStr += ` x${cart[key].count}`;
-                detailsList.push(itemStr);
-                processedNames.add(cart[key].name);
-            }
-        }
-        const orderDetailsString = detailsList.join(", ");
-
-        if(!confirm(`送信します。送信後は内容がロックされます。`)) return;
+        const details = Object.values(cart).filter(i => i.count > 0).map(i => `${i.name}x${i.count}`).join(", ");
+        if (!confirm("注文内容を送信します。よろしいですか？")) return;
 
         showLoading("送信中...");
         try {
             await fetch(GAS_API_URL, {
                 method: 'POST', mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: name, details: orderDetailsString, total: globalTotal, balance: globalBalance, action: "submit", isUnlimited: isCurrentUnlimited
-                })
+                body: JSON.stringify({ name, details, total: globalTotal, action: "submit" })
             });
-            
-            alert("送信完了！修正する場合は、左下の「修正する」ボタンを押してください。");
             document.getElementById('scroll-area').classList.add('locked');
-            document.getElementById('header-area').classList.add('locked');
             document.getElementById('submit-btn').style.display = 'none';
-            document.getElementById('post-submit-controls').style.display = 'block';
-            document.getElementById('edit-unlock-btn').style.display = 'block';
-            document.getElementById('final-complete-btn').innerText = "精算完了";
+            document.getElementById('post-submit-controls').style.display = 'flex';
             hideLoading();
-        } catch (e) {
-            alert("通信エラー");
-            hideLoading();
-        }
-    }
-
-    function enableEdit() {
-        if(!confirm("注文内容を修正しますか？")) return;
-        document.getElementById('scroll-area').classList.remove('locked');
-        document.getElementById('header-area').classList.remove('locked');
-        document.getElementById('submit-btn').style.display = 'block';
-        document.getElementById('submit-btn').innerText = "修正内容で再送信する";
-        document.getElementById('post-submit-controls').style.display = 'none';
+        } catch (e) { hideLoading(); alert("送信エラー"); }
     }
 
     async function settleComplete() {
         const name = document.getElementById('user-select').value;
-        let msg = "";
-
-        if (isCurrentUnlimited) {
-            msg = "会費11,500円をお支払いいただきましたか？";
-        } else {
-            const absBalance = Math.abs(globalBalance).toLocaleString();
-            if (globalBalance > 0) {
-                msg = `${absBalance}円をお支払いいただきましたか？`;
-            } else if (globalBalance < 0) {
-                msg = `${absBalance}円の返金を受けましたか？`;
-            } else {
-                msg = "差額0円。精算完了を記録しますか？";
-            }
-        }
-
-        if(!confirm(msg)) return;
-        
-        showLoading("更新中...");
+        if (!confirm("精算を完了しますか？")) return;
+        showLoading("完了処理中...");
         try {
             await fetch(GAS_API_URL, {
                 method: 'POST', mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: name, action: "complete", isUnlimited: isCurrentUnlimited })
+                body: JSON.stringify({ name, action: "complete" })
             });
+            alert("精算が完了しました！");
+            location.reload();
+        } catch (e) { hideLoading(); alert("エラー"); }
+    }
 
-            if (isCurrentUnlimited) {
-                alert("精算完了しました！楽しい新年会になりますように！");
-            } else {
-                alert("精算完了しました！次回のオフ会で再見！");
-            }
-
-            location.reload(); 
-        } catch (e) {
-            alert("エラー");
-            hideLoading();
-        }
+    function enableEdit() {
+        document.getElementById('scroll-area').classList.remove('locked');
+        document.getElementById('submit-btn').style.display = 'block';
+        document.getElementById('post-submit-controls').style.display = 'none';
     }
 
     function renderTabs() {
@@ -333,20 +260,19 @@
                 subTitle.textContent = g.label;
                 contentDiv.appendChild(subTitle);
                 g.items.forEach((item, idx) => {
-                    const id = `t${i}-${g.label}-${idx}`;
-                    const menuKey = item.name;
-                    cart[id] = { name: item.name, price: item.price, count: 0 }; 
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'menu-item';
-                    itemDiv.innerHTML = `
-                        <div class="item-info"><span class="item-name">${item.name}<span class="item-price-tag">¥${item.price.toLocaleString()}</span></span></div>
+                    const id = `item-${i}-${idx}-${g.label}`;
+                    cart[id] = { name: item.name, price: item.price, count: 0 };
+                    const div = document.createElement('div');
+                    div.className = 'menu-item';
+                    div.innerHTML = `
+                        <div><span class="item-name">${item.name}</span><span class="item-price">¥${item.price.toLocaleString()}</span></div>
                         <div class="controls">
-                            <button class="btn btn-minus" onclick="upd('${id}', '${menuKey}', -1)">-</button>
+                            <button class="btn btn-minus" onclick="upd('${id}', -1)">-</button>
                             <span class="count" id="cnt-${id}">0</span>
-                            <button class="btn btn-plus" onclick="upd('${id}', '${menuKey}', 1)">+</button>
+                            <button class="btn btn-plus" onclick="upd('${id}', 1)">+</button>
                         </div>
                     `;
-                    contentDiv.appendChild(itemDiv);
+                    contentDiv.appendChild(div);
                 });
             });
             container.appendChild(contentDiv);
@@ -356,44 +282,26 @@
     function switchTab(idx) {
         document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
-        const tabBtn = document.getElementById(`tab-btn-${idx}`);
-        if(tabBtn) tabBtn.classList.add('active');
-        const content = document.getElementById(`content-${idx}`);
-        if(content) content.classList.add('active');
+        document.getElementById(`tab-btn-${idx}`).classList.add('active');
+        document.getElementById(`content-${idx}`).classList.add('active');
         document.getElementById('scroll-area').scrollTop = 0;
     }
 
-    function upd(id, menuKey, chg) {
-        for (const k in cart) {
-            if (cart[k].name === menuKey) {
-                if (cart[k].count + chg < 0) return;
-                cart[k].count += chg;
-                const el = document.getElementById(`cnt-${k}`);
-                if (el) {
-                    el.textContent = cart[k].count;
-                    if(cart[k].count > 0) el.classList.add('active');
-                    else el.classList.remove('active');
-                }
-            }
-        }
+    function upd(id, chg) {
+        if (cart[id].count + chg < 0) return;
+        cart[id].count += chg;
+        document.getElementById(`cnt-${id}`).textContent = cart[id].count;
         calc();
     }
 
     function calc() {
-        globalTotal = 0;
-        const processedNames = new Set();
-        for (let k in cart) {
-            if (!processedNames.has(cart[k].name)) {
-                globalTotal += cart[k].price * cart[k].count;
-                processedNames.add(cart[k].name);
-            }
-        }
+        globalTotal = Object.values(cart).reduce((sum, i) => sum + (i.price * i.count), 0);
         globalBalance = globalTotal - PREPAID_DRINK_BUDGET;
         document.getElementById('current-total').textContent = globalTotal.toLocaleString();
         const lbl = document.getElementById('status-label');
         const res = document.getElementById('final-result');
         if (globalBalance > 0) {
-            lbl.textContent = "追加支払い";
+            lbl.textContent = "不足分支払い";
             res.textContent = `+${globalBalance.toLocaleString()}円`;
             res.className = "final-amount pay";
         } else {
