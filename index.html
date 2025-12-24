@@ -154,7 +154,7 @@
             userMasterData.forEach(user => {
                 const opt = document.createElement('option');
                 opt.value = user.name;
-                opt.textContent = user.name + (user.status === "精算完了" ? " (精算済)" : (user.isUnlimited ? " 【飲み放題】" : ""));
+                opt.textContent = user.name + (user.status === "精算完了" ? " (※精算済)" : (user.isUnlimited ? " 【飲み放題】" : ""));
                 select.appendChild(opt);
             });
             overlay.style.display = 'none';
@@ -381,6 +381,7 @@
 </script>
 </body>
 </html>
+
 
 
 
