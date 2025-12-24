@@ -14,12 +14,12 @@
         .login-label { font-size: 0.75rem; font-weight: bold; margin-bottom: 5px; display: block; color: #e67e22; }
         select { width: 100%; padding: 10px; font-size: 1rem; border: 2px solid #27ae60; border-radius: 8px; background: #fff; appearance: none; }
         
-        /* タブコンテナ：ここが確実に表示されるようにします */
-        .tabs-container { overflow-x: auto; white-space: nowrap; border-bottom: 1px solid #ddd; background: #fff; display: block; min-height: 45px; }
-        .tab { display: inline-block; padding: 12px 18px; font-size: 0.85rem; font-weight: bold; color: #95a5a6; cursor: pointer; border-bottom: 3px solid transparent; }
+        /* タブコンテナのスタイル修正 */
+        .tabs-container { overflow-x: auto; white-space: nowrap; border-bottom: 1px solid #ddd; background: #fff; display: block !important; height: 48px; }
+        .tab { display: inline-block; padding: 14px 18px; font-size: 0.85rem; font-weight: bold; color: #95a5a6; cursor: pointer; border-bottom: 3px solid transparent; }
         .tab.active { color: #27ae60; border-bottom-color: #27ae60; }
 
-        .scrollable-content { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: 190px; padding-bottom: 180px; box-sizing: border-box; }
+        .scrollable-content { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: 195px; padding-bottom: 180px; box-sizing: border-box; }
         .container { max-width: 600px; margin: 0 auto; padding: 10px; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
@@ -105,6 +105,7 @@
     let globalTotal = 0;
     let userMasterData = [];
 
+    // 順序を制御：HTML描画 -> 名簿取得
     window.onload = async () => {
         renderTabs();
         renderContent();
@@ -112,79 +113,9 @@
         await fetchNames();
     };
 
-    async function fetchNames() {
-        showLoading();
-        try {
-            const response = await fetch(GAS_API_URL + "?action=getData");
-            userMasterData = await response.json();
-            const select = document.getElementById('user-select');
-            select.innerHTML = '<option value="">▼ 名前を選択してください</option>';
-            userMasterData.forEach(user => {
-                const opt = document.createElement('option');
-                opt.value = user.name;
-                opt.textContent = user.name + (user.isUnlimited ? "【飲放】" : "") + (user.status === "精算完了" ? " (済)" : "");
-                if (user.status === "精算完了") opt.disabled = true;
-                select.appendChild(opt);
-            });
-            hideLoading();
-        } catch (e) { hideLoading(); alert("名簿の読み込みに失敗しました"); }
-    }
-
-    function checkUserStatus() {
-        const name = document.getElementById('user-select').value;
-        if (!name) {
-            document.getElementById('price-display-area').style.display = 'none';
-            document.getElementById('submit-btn').style.display = 'none';
-            document.getElementById('post-submit-controls').style.display = 'none';
-            document.getElementById('tabs-nav').style.display = 'block'; // 初期状態
-            return;
-        }
-
-        const user = userMasterData.find(u => u.name === name);
-        const isUnlimited = user.isUnlimited;
-
-        // タブナビゲーションの表示を制御
-        document.getElementById('tabs-nav').style.display = isUnlimited ? 'none' : 'block';
-        document.getElementById('menu-container').style.display = isUnlimited ? 'none' : 'block';
-        document.getElementById('unlimited-panel').style.display = isUnlimited ? 'block' : 'none';
-        
-        document.getElementById('price-display-area').style.display = isUnlimited ? 'none' : 'flex';
-        document.getElementById('submit-btn').style.display = isUnlimited ? 'none' : 'block';
-        document.getElementById('post-submit-controls').style.display = isUnlimited ? 'flex' : 'none';
-        document.getElementById('edit-btn').style.display = isUnlimited ? 'none' : 'block';
-        
-        if (!isUnlimited) calc();
-    }
-
-    async function submitData() {
-        const name = document.getElementById('user-select').value;
-        const details = Object.values(cart).filter(i => i.count > 0).map(i => `${i.name}x${i.count}`).join(", ");
-        if (globalTotal === 0) return alert("メニューを選択してください");
-        if (!confirm("注文内容を送信します。よろしいですか？")) return;
-        
-        showLoading();
-        try {
-            await fetch(GAS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, details, total: globalTotal, action: "submit" }) });
-            document.getElementById('submit-btn').style.display = 'none';
-            document.getElementById('post-submit-controls').style.display = 'flex';
-            hideLoading();
-            alert("送信しました！精算を行ってください。");
-        } catch (e) { hideLoading(); alert("エラー"); }
-    }
-
-    async function settleComplete() {
-        const name = document.getElementById('user-select').value;
-        if (!confirm("精算を完了し、画面を閉じますか？")) return;
-        showLoading();
-        try {
-            await fetch(GAS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, action: "complete" }) });
-            location.reload();
-        } catch (e) { hideLoading(); alert("エラー"); }
-    }
-
     function renderTabs() {
         const nav = document.getElementById('tabs-nav');
-        nav.innerHTML = ""; // 念のため初期化
+        nav.innerHTML = ""; 
         menuData.forEach((d, i) => {
             const btn = document.createElement('div');
             btn.className = 'tab'; 
@@ -197,7 +128,7 @@
 
     function renderContent() {
         const container = document.getElementById('menu-container');
-        container.innerHTML = ""; // 初期化
+        container.innerHTML = "";
         menuData.forEach((d, i) => {
             const contentDiv = document.createElement('div');
             contentDiv.className = 'tab-content'; contentDiv.id = `content-${i}`;
@@ -223,6 +154,52 @@
             });
             container.appendChild(contentDiv);
         });
+    }
+
+    async function fetchNames() {
+        showLoading();
+        try {
+            const response = await fetch(GAS_API_URL + "?action=getData");
+            userMasterData = await response.json();
+            const select = document.getElementById('user-select');
+            select.innerHTML = '<option value="">▼ 名前を選択してください</option>';
+            userMasterData.forEach(user => {
+                const opt = document.createElement('option');
+                opt.value = user.name;
+                opt.textContent = user.name + (user.isUnlimited ? "【飲放】" : "") + (user.status === "精算完了" ? " (済)" : "");
+                if (user.status === "精算完了") opt.disabled = true;
+                select.appendChild(opt);
+            });
+            hideLoading();
+        } catch (e) { hideLoading(); alert("名簿の読み込みに失敗しました"); }
+    }
+
+    function checkUserStatus() {
+        const name = document.getElementById('user-select').value;
+        const nav = document.getElementById('tabs-nav');
+        
+        if (!name) {
+            document.getElementById('price-display-area').style.display = 'none';
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('post-submit-controls').style.display = 'none';
+            nav.style.display = 'block';
+            return;
+        }
+
+        const user = userMasterData.find(u => u.name === name);
+        const isUnlimited = user.isUnlimited;
+
+        // 【ここが重要】飲み放題でない場合のみタブを表示
+        nav.style.setProperty('display', isUnlimited ? 'none' : 'block', 'important');
+        document.getElementById('menu-container').style.display = isUnlimited ? 'none' : 'block';
+        document.getElementById('unlimited-panel').style.display = isUnlimited ? 'block' : 'none';
+        
+        document.getElementById('price-display-area').style.display = isUnlimited ? 'none' : 'flex';
+        document.getElementById('submit-btn').style.display = isUnlimited ? 'none' : 'block';
+        document.getElementById('post-submit-controls').style.display = isUnlimited ? 'flex' : 'none';
+        document.getElementById('edit-btn').style.display = isUnlimited ? 'none' : 'block';
+        
+        if (!isUnlimited) calc();
     }
 
     function switchTab(idx) {
@@ -255,6 +232,31 @@
             lbl.textContent = "返金受取";
             res.textContent = `${Math.abs(bal).toLocaleString()}円`; res.style.color = "#2980b9";
         }
+    }
+
+    async function submitData() {
+        const name = document.getElementById('user-select').value;
+        const details = Object.values(cart).filter(i => i.count > 0).map(i => `${i.name}x${i.count}`).join(", ");
+        if (globalTotal === 0) return alert("メニューを選択してください");
+        if (!confirm("注文内容を送信します。よろしいですか？")) return;
+        showLoading();
+        try {
+            await fetch(GAS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, details, total: globalTotal, action: "submit" }) });
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('post-submit-controls').style.display = 'flex';
+            hideLoading();
+            alert("送信しました！精算を行ってください。");
+        } catch (e) { hideLoading(); alert("エラー"); }
+    }
+
+    async function settleComplete() {
+        const name = document.getElementById('user-select').value;
+        if (!confirm("精算を完了し、画面を閉じますか？")) return;
+        showLoading();
+        try {
+            await fetch(GAS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, action: "complete" }) });
+            location.reload();
+        } catch (e) { hideLoading(); alert("エラー"); }
     }
 
     function showLoading() { document.getElementById('loading-overlay').style.display = 'flex'; }
