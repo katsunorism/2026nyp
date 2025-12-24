@@ -9,7 +9,7 @@
         .fixed-header { position: fixed; top: 0; left: 0; width: 100%; background: white; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         header { background-color: #2c3e50; color: white; padding: 12px; text-align: center; }
         h1 { margin: 0; font-size: 1rem; }
-        .status-bar { font-size: 0.8rem; margin-top: 4px; opacity: 0.9; }
+        .status-bar { font-size: 0.8rem; margin-top: 4px; opacity: 0.9; min-height: 1.2em; } /* 高さを確保してガタつきを防止 */
         .login-section { padding: 10px 15px; border-bottom: 1px solid #eee; }
         .login-label { font-size: 0.8rem; font-weight: bold; margin-bottom: 5px; display: block; color: #e67e22; }
         select { width: 100%; padding: 8px; font-size: 1rem; border: 1px solid #ccc; border-radius: 5px; background: white; }
@@ -62,7 +62,7 @@
 <div class="fixed-header" id="header-area">
     <header>
         <h1>2026新年会in大阪 会費精算</h1>
-        <div class="status-bar" id="budget-info">デポジット済：10,000円(※食事代: 7,500円)</div>
+        <div class="status-bar" id="budget-info"></div>
     </header>
     <div class="login-section">
         <label class="login-label">名前を選択してください</label>
@@ -153,10 +153,8 @@
             userMasterData = await response.json();
             select.innerHTML = '<option value="">▼ 名前を選択してください</option>';
             
-            // ★ 未精算の人と精算済みの人を分けて、未精算を上に持ってくる
             const activeUsers = userMasterData.filter(u => u.status !== "精算完了");
             const settledUsers = userMasterData.filter(u => u.status === "精算完了");
-
             const sortedUsers = [...activeUsers, ...settledUsers];
 
             sortedUsers.forEach(user => {
@@ -182,6 +180,7 @@
         const name = document.getElementById('user-select').value;
         const user = userMasterData.find(u => u.name === name);
         
+        // 全リセット
         document.getElementById('scroll-area').classList.remove('locked');
         document.getElementById('header-area').classList.remove('locked');
         document.getElementById('menu-container').style.display = 'block';
@@ -191,7 +190,9 @@
         document.getElementById('submit-btn').style.display = 'block';
         document.getElementById('post-submit-controls').style.display = 'none';
         document.getElementById('submit-btn').innerText = "注文内容を送信する";
-        document.getElementById('budget-info').innerText = "デポジット済：10,000円(※食事代: 7,500円)";
+        
+        // 名前が選択されていない場合はヘッダーを空にする
+        document.getElementById('budget-info').innerText = ""; 
         isCurrentUnlimited = false;
 
         if (!user) return;
@@ -209,11 +210,15 @@
             document.getElementById('tabs-nav').style.display = 'none';
             document.getElementById('unlimited-panel').style.display = 'block';
             document.getElementById('price-summary').style.display = 'none';
+            // 飲み放題専用の表示
             document.getElementById('budget-info').innerText = "飲み放題プラン：事前精算(11,500円)";
             document.getElementById('submit-btn').style.display = 'none';
             document.getElementById('post-submit-controls').style.display = 'block';
             document.getElementById('edit-unlock-btn').style.display = 'none';
             document.getElementById('final-complete-btn').innerText = "支払完了（主催者確認）";
+        } else {
+            // 飲み放題なし専用の表示
+            document.getElementById('budget-info').innerText = "デポジット済：10,000円(※食事代: 7,500円)";
         }
     }
 
@@ -272,7 +277,6 @@
         const name = document.getElementById('user-select').value;
         let msg = "";
 
-        // ★ 動的な確認メッセージの作成
         if (isCurrentUnlimited) {
             msg = "会費11,500円をお支払いいただきましたか？";
         } else {
@@ -407,4 +411,3 @@
 </script>
 </body>
 </html>
-
