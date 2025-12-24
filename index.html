@@ -13,9 +13,12 @@
         .login-section { padding: 12px 15px; border-bottom: 1px solid #eee; }
         .login-label { font-size: 0.75rem; font-weight: bold; margin-bottom: 5px; display: block; color: #e67e22; }
         select { width: 100%; padding: 10px; font-size: 1rem; border: 2px solid #27ae60; border-radius: 8px; background: #fff; appearance: none; }
-        .tabs-container { overflow-x: auto; white-space: nowrap; border-bottom: 1px solid #ddd; background: #fff; }
+        
+        /* タブコンテナ：ここが確実に表示されるようにします */
+        .tabs-container { overflow-x: auto; white-space: nowrap; border-bottom: 1px solid #ddd; background: #fff; display: block; min-height: 45px; }
         .tab { display: inline-block; padding: 12px 18px; font-size: 0.85rem; font-weight: bold; color: #95a5a6; cursor: pointer; border-bottom: 3px solid transparent; }
         .tab.active { color: #27ae60; border-bottom-color: #27ae60; }
+
         .scrollable-content { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: 190px; padding-bottom: 180px; box-sizing: border-box; }
         .container { max-width: 600px; margin: 0 auto; padding: 10px; }
         .tab-content { display: none; }
@@ -133,17 +136,18 @@
             document.getElementById('price-display-area').style.display = 'none';
             document.getElementById('submit-btn').style.display = 'none';
             document.getElementById('post-submit-controls').style.display = 'none';
+            document.getElementById('tabs-nav').style.display = 'block'; // 初期状態
             return;
         }
 
         const user = userMasterData.find(u => u.name === name);
         const isUnlimited = user.isUnlimited;
 
+        // タブナビゲーションの表示を制御
         document.getElementById('tabs-nav').style.display = isUnlimited ? 'none' : 'block';
         document.getElementById('menu-container').style.display = isUnlimited ? 'none' : 'block';
         document.getElementById('unlimited-panel').style.display = isUnlimited ? 'block' : 'none';
         
-        // 飲み放題のときは修正ボタンを隠し、精算するボタンのみ出す
         document.getElementById('price-display-area').style.display = isUnlimited ? 'none' : 'flex';
         document.getElementById('submit-btn').style.display = isUnlimited ? 'none' : 'block';
         document.getElementById('post-submit-controls').style.display = isUnlimited ? 'flex' : 'none';
@@ -180,17 +184,20 @@
 
     function renderTabs() {
         const nav = document.getElementById('tabs-nav');
+        nav.innerHTML = ""; // 念のため初期化
         menuData.forEach((d, i) => {
             const btn = document.createElement('div');
-            btn.className = 'tab'; btn.textContent = d.tabName;
-            btn.onclick = () => switchTab(i);
+            btn.className = 'tab'; 
+            btn.textContent = d.tabName;
             btn.id = `tab-btn-${i}`;
+            btn.onclick = () => switchTab(i);
             nav.appendChild(btn);
         });
     }
 
     function renderContent() {
         const container = document.getElementById('menu-container');
+        container.innerHTML = ""; // 初期化
         menuData.forEach((d, i) => {
             const contentDiv = document.createElement('div');
             contentDiv.className = 'tab-content'; contentDiv.id = `content-${i}`;
@@ -221,8 +228,10 @@
     function switchTab(idx) {
         document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
-        document.getElementById(`tab-btn-${idx}`).classList.add('active');
-        document.getElementById(`content-${idx}`).classList.add('active');
+        const activeTab = document.getElementById(`tab-btn-${idx}`);
+        const activeContent = document.getElementById(`content-${idx}`);
+        if(activeTab) activeTab.classList.add('active');
+        if(activeContent) activeContent.classList.add('active');
     }
 
     function upd(id, chg) {
