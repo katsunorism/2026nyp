@@ -17,11 +17,9 @@
         .tab { display: inline-block; padding: 12px 15px; font-size: 0.9rem; font-weight: bold; color: #7f8c8d; cursor: pointer; border-bottom: 3px solid transparent; }
         .tab.active { color: #27ae60; border-bottom-color: #27ae60; }
         
-        /* スクロールエリアとロック用の設定 */
         .scrollable-content { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: 185px; padding-bottom: 220px; box-sizing: border-box; transition: opacity 0.3s; }
         .container { max-width: 600px; margin: 0 auto; padding: 10px; }
         
-        /* ロック状態のスタイル */
         .locked { opacity: 0.5; pointer-events: none; filter: grayscale(0.5); }
 
         .tab-content { display: none; }
@@ -47,7 +45,7 @@
         
         #post-submit-controls { margin-top: 12px; padding: 0 20px; }
         .secondary-btn { flex: 1; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 0.9rem; cursor: pointer; border: none; }
-        .btn-edit { background-color: #f39c12; color: white; } /* 修正は少し目立つ色に */
+        .btn-edit { background-color: #f39c12; color: white; } 
         .btn-complete { background-color: #27ae60; color: white; }
 
         #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; }
@@ -69,7 +67,7 @@
     </header>
     <div class="login-section">
         <label class="login-label">名前を選択してください</label>
-        <select id="user-select">
+        <select id="user-select" onchange="checkUserStatus()">
             <option value="">読み込み中...</option>
         </select>
     </div>
@@ -103,7 +101,7 @@
 </div>
 
 <script>
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxzrW9_8yFuKriqKF-F3H3TDY5pOYOJJC2CJidMwkB7SeERW8IVIAmIk4WU2dpzmYYIdw/exec"; 
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwrRUBp7N715fVRDeI-SZLhbrtbiEHNHykrN2I-e28uLN2V3rtojCUWQg8RycDy0ZHmHw/exec"; 
 
     const menuData = [
         { tabName: "カイピリーニャ", groups: [
@@ -132,6 +130,7 @@
     const cart = {};
     let globalTotal = 0;
     let globalBalance = -2500;
+    let userMasterData = []; // ユーザー名とステータスの保持用
 
     window.onload = async function() {
         renderTabs();
@@ -146,12 +145,12 @@
         overlay.style.display = 'flex';
         try {
             const response = await fetch(GAS_API_URL);
-            const names = await response.json();
+            userMasterData = await response.json(); // [{name: "...", status: "..."}, ...]
             select.innerHTML = '<option value="">▼ 名前を選択してください</option>';
-            names.forEach(name => {
+            userMasterData.forEach(user => {
                 const opt = document.createElement('option');
-                opt.value = name;
-                opt.textContent = name;
+                opt.value = user.name;
+                opt.textContent = user.name + (user.status === "精算完了" ? " (精算完了済)" : "");
                 select.appendChild(opt);
             });
             overlay.style.display = 'none';
@@ -161,7 +160,24 @@
         }
     }
 
-    // 送信して画面をロックする
+    // 名前選択時にステータスを確認
+    function checkUserStatus() {
+        const name = document.getElementById('user-select').value;
+        const user = userMasterData.find(u => u.name === name);
+        
+        // リセット
+        document.getElementById('scroll-area').classList.remove('locked');
+        document.getElementById('header-area').classList.remove('locked');
+        document.getElementById('submit-btn').style.display = 'block';
+        document.getElementById('post-submit-controls').style.display = 'none';
+
+        if (user && user.status === "精算完了") {
+            alert("この方は既に精算が完了しているため、内容の変更はできません。");
+            document.getElementById('scroll-area').classList.add('locked');
+            document.getElementById('submit-btn').style.display = 'none';
+        }
+    }
+
     async function submitData() {
         const name = document.getElementById('user-select').value;
         if (!name) { alert("名前を選択してください！"); return; }
@@ -194,13 +210,10 @@
             });
             
             alert("送信完了！修正する場合は、左下の「修正する」ボタンを押してください。");
-            
-            // ロック処理
             document.getElementById('scroll-area').classList.add('locked');
             document.getElementById('header-area').classList.add('locked');
             document.getElementById('submit-btn').style.display = 'none';
             document.getElementById('post-submit-controls').style.display = 'block';
-            
             hideLoading();
         } catch (e) {
             alert("通信エラー");
@@ -208,16 +221,13 @@
         }
     }
 
-    // ロックを解除して修正可能にする
     function enableEdit() {
         if(!confirm("注文の修正を許可しますか？")) return;
-        
         document.getElementById('scroll-area').classList.remove('locked');
         document.getElementById('header-area').classList.remove('locked');
         document.getElementById('submit-btn').style.display = 'block';
         document.getElementById('submit-btn').innerText = "修正内容で再送信する";
         document.getElementById('post-submit-controls').style.display = 'none';
-        
         alert("ロックを解除しました。修正が終わったら再度「送信」ボタンを押してください。");
     }
 
@@ -239,7 +249,7 @@
         }
     }
 
-    // --- 以下、メニュー描画等の基本ロジック ---
+    // --- メニュー描画等 ---
     function renderTabs() {
         const nav = document.getElementById('tabs-nav');
         menuData.forEach((d, i) => {
@@ -342,7 +352,3 @@
 </script>
 </body>
 </html>
-
-
-
-
