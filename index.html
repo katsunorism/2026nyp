@@ -9,7 +9,7 @@
         .fixed-header { position: fixed; top: 0; left: 0; width: 100%; background: white; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         header { background-color: #2c3e50; color: white; padding: 12px; text-align: center; }
         h1 { margin: 0; font-size: 1rem; }
-        .status-bar { font-size: 0.8rem; margin-top: 4px; opacity: 0.9; min-height: 1.2em; } /* 高さを確保してガタつきを防止 */
+        .status-bar { font-size: 0.8rem; margin-top: 4px; opacity: 0.9; min-height: 1.2em; }
         .login-section { padding: 10px 15px; border-bottom: 1px solid #eee; }
         .login-label { font-size: 0.8rem; font-weight: bold; margin-bottom: 5px; display: block; color: #e67e22; }
         select { width: 100%; padding: 8px; font-size: 1rem; border: 1px solid #ccc; border-radius: 5px; background: white; }
@@ -77,7 +77,7 @@
     <div id="unlimited-panel">
         <span class="plan-badge">飲み放題プラン</span>
         <h2 style="margin: 10px 0;">会費：11,500円</h2>
-        <p style="font-size: 0.9rem; color: #666;">主催者に会費を支払い後、下の「支払完了」ボタンを押してください。</p>
+        <p style="font-size: 0.9rem; color: #666;">主催者に会費を支払い後、下の「精算完了」ボタンを押してください。</p>
     </div>
     <div class="container" id="menu-container"></div>
 </div>
@@ -173,6 +173,7 @@
         } catch (e) {
             overlay.style.display = 'none';
             select.innerHTML = '<option value="">(取得失敗)</option>';
+            alert("エラー: 名簿の取得に失敗しました。再読み込みしてください。");
         }
     }
 
@@ -180,7 +181,6 @@
         const name = document.getElementById('user-select').value;
         const user = userMasterData.find(u => u.name === name);
         
-        // 全リセット
         document.getElementById('scroll-area').classList.remove('locked');
         document.getElementById('header-area').classList.remove('locked');
         document.getElementById('menu-container').style.display = 'block';
@@ -190,8 +190,6 @@
         document.getElementById('submit-btn').style.display = 'block';
         document.getElementById('post-submit-controls').style.display = 'none';
         document.getElementById('submit-btn').innerText = "注文内容を送信する";
-        
-        // 名前が選択されていない場合はヘッダーを空にする
         document.getElementById('budget-info').innerText = ""; 
         isCurrentUnlimited = false;
 
@@ -210,14 +208,12 @@
             document.getElementById('tabs-nav').style.display = 'none';
             document.getElementById('unlimited-panel').style.display = 'block';
             document.getElementById('price-summary').style.display = 'none';
-            // 飲み放題専用の表示
             document.getElementById('budget-info').innerText = "飲み放題プラン：事前精算(11,500円)";
             document.getElementById('submit-btn').style.display = 'none';
             document.getElementById('post-submit-controls').style.display = 'block';
             document.getElementById('edit-unlock-btn').style.display = 'none';
-            document.getElementById('final-complete-btn').innerText = "支払完了（主催者確認）";
+            document.getElementById('final-complete-btn').innerText = "精算完了（主催者確認）";
         } else {
-            // 飲み放題なし専用の表示
             document.getElementById('budget-info').innerText = "デポジット済：10,000円(※食事代: 7,500円)";
         }
     }
@@ -246,7 +242,7 @@
                 method: 'POST', mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    name: name, details: orderDetailsString, total: globalTotal, balance: globalBalance, action: "submit", isUnlimited: false
+                    name: name, details: orderDetailsString, total: globalTotal, balance: globalBalance, action: "submit", isUnlimited: isCurrentUnlimited
                 })
             });
             
@@ -277,7 +273,6 @@
         const name = document.getElementById('user-select').value;
         let msg = "";
 
-        // --- 確認ダイアログのメッセージ出し分け ---
         if (isCurrentUnlimited) {
             msg = "会費11,500円をお支払いいただきましたか？";
         } else {
@@ -301,30 +296,12 @@
                 body: JSON.stringify({ name: name, action: "complete", isUnlimited: isCurrentUnlimited })
             });
 
-            // --- 完了アラートのメッセージ出し分け ---
             if (isCurrentUnlimited) {
                 alert("精算完了しました！楽しい新年会になりますように！");
             } else {
                 alert("精算完了しました！次回のオフ会で再見！");
             }
 
-            location.reload(); 
-        } catch (e) {
-            alert("エラー");
-            hideLoading();
-        }
-    }
-
-        if(!confirm(msg)) return;
-        
-        showLoading("更新中...");
-        try {
-            await fetch(GAS_API_URL, {
-                method: 'POST', mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: name, action: "complete", isUnlimited: isCurrentUnlimited })
-            });
-            alert("精算完了しました！次回のオフ会で再見！");
             location.reload(); 
         } catch (e) {
             alert("エラー");
@@ -436,5 +413,3 @@
 </script>
 </body>
 </html>
-
-
