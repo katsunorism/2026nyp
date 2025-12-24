@@ -277,6 +277,7 @@
         const name = document.getElementById('user-select').value;
         let msg = "";
 
+        // --- 確認ダイアログのメッセージ出し分け ---
         if (isCurrentUnlimited) {
             msg = "会費11,500円をお支払いいただきましたか？";
         } else {
@@ -289,6 +290,30 @@
                 msg = "差額0円。精算完了を記録しますか？";
             }
         }
+
+        if(!confirm(msg)) return;
+        
+        showLoading("更新中...");
+        try {
+            await fetch(GAS_API_URL, {
+                method: 'POST', mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name, action: "complete", isUnlimited: isCurrentUnlimited })
+            });
+
+            // --- 完了アラートのメッセージ出し分け ---
+            if (isCurrentUnlimited) {
+                alert("精算完了しました！楽しい新年会になりますように！");
+            } else {
+                alert("精算完了しました！次回のオフ会で再見！");
+            }
+
+            location.reload(); 
+        } catch (e) {
+            alert("エラー");
+            hideLoading();
+        }
+    }
 
         if(!confirm(msg)) return;
         
@@ -411,3 +436,4 @@
 </script>
 </body>
 </html>
+
