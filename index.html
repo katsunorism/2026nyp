@@ -3,332 +3,254 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2026 NYP in OSAKA</title>
+    <title>2026カテコミュ新年会 in 大阪</title>
     <style>
-        :root {
-            --primary: #27ae60; --primary-dark: #219150;
-            --accent: #e67e22; --danger: #e74c3c;
-            --bg: #f4f7f6; --white: #ffffff;
-            --text: #2c3e50; --gray: #95a5a6;
-        }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", sans-serif; background: var(--bg); color: var(--text); height: 100dvh; display: flex; flex-direction: column; }
+        html, body { height: 100%; margin: 0; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fcf9; color: #333; }
+        .fixed-header { position: fixed; top: 0; left: 0; width: 100%; background: white; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        header { background-color: #27ae60; color: white; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 12px; }
+        .header-logo { width: 34px; height: 34px; border-radius: 50%; border: 2px solid white; background: white; object-fit: cover; }
+        header h1 { margin: 0; font-size: 1.1rem; letter-spacing: 0.5px; }
+        .login-section { padding: 12px 15px; border-bottom: 1px solid #eee; }
+        .login-label { font-size: 0.75rem; font-weight: bold; margin-bottom: 5px; display: block; color: #e67e22; }
+        select { width: 100%; padding: 10px; font-size: 1rem; border: 2px solid #27ae60; border-radius: 8px; background: #fff; appearance: none; }
         
-        /* Header */
-        .fixed-header { background: var(--white); box-shadow: 0 2px 15px rgba(0,0,0,0.08); z-index: 100; }
-        header { background: var(--primary); color: white; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .header-logo { width: 32px; height: 32px; border-radius: 50%; background: white; border: 2px solid white; }
-        header h1 { margin: 0; font-size: 1rem; font-weight: 800; letter-spacing: 1px; }
+        .tabs-container { overflow-x: auto; white-space: nowrap; border-bottom: 1px solid #ddd; background: #fff; display: flex; }
+        .tab { padding: 12px 20px; font-size: 0.85rem; font-weight: bold; color: #95a5a6; cursor: pointer; border-bottom: 3px solid transparent; flex-shrink: 0; }
+        .tab.active { color: #27ae60; border-bottom-color: #27ae60; }
 
-        .user-selector-area { padding: 15px; border-bottom: 1px solid #edf2f1; }
-        .label-sm { font-size: 11px; font-weight: bold; color: var(--accent); margin-bottom: 4px; display: block; text-transform: uppercase; }
-        select { width: 100%; padding: 12px; font-size: 16px; border: 2px solid #e0e6e5; border-radius: 12px; background: var(--white); transition: border 0.3s; outline: none; appearance: none; }
-        select:focus { border-color: var(--primary); }
-
-        /* Tabs */
-        .tabs-nav { display: flex; overflow-x: auto; background: var(--white); border-bottom: 1px solid #eee; scrollbar-width: none; }
-        .tabs-nav::-webkit-scrollbar { display: none; }
-        .tab { padding: 14px 20px; font-size: 13px; font-weight: bold; color: var(--gray); white-space: nowrap; border-bottom: 3px solid transparent; transition: 0.2s; }
-        .tab.active { color: var(--primary); border-bottom-color: var(--primary); background: rgba(39, 174, 96, 0.05); }
-
-        /* Content */
-        .scrollable-content { flex: 1; overflow-y: auto; padding-bottom: 200px; }
-        .container { max-width: 600px; margin: 0 auto; padding: 15px; }
-        .tab-content { display: none; animation: fadeIn 0.3s ease; }
+        .scrollable-content { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: 200px; padding-bottom: 180px; box-sizing: border-box; }
+        .container { max-width: 600px; margin: 0 auto; padding: 10px; }
+        .tab-content { display: none; }
         .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Menu Item */
-        .category-title { font-size: 12px; font-weight: 800; color: var(--primary); margin: 20px 0 10px 5px; display: flex; align-items: center; gap: 8px; }
-        .category-title::after { content: ""; flex: 1; height: 1px; background: #eee; }
-        .menu-card { background: var(--white); border-radius: 16px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: 0.2s; border: 1px solid transparent; }
-        .menu-card.selected { border-color: var(--primary); background: #f0fff4; }
-        .item-info { display: flex; flex-direction: column; }
-        .item-name { font-weight: bold; font-size: 15px; margin-bottom: 4px; }
-        .item-price { font-size: 13px; color: var(--gray); }
         
-        /* Controls */
-        .counter { display: flex; align-items: center; background: #f8f9f9; border-radius: 30px; padding: 4px; border: 1px solid #eee; }
-        .btn-qty { width: 36px; height: 36px; border-radius: 50%; border: none; font-size: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-        .btn-minus { background: white; color: var(--gray); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .btn-plus { background: var(--primary); color: white; box-shadow: 0 3px 6px rgba(39,174,96,0.3); }
-        .qty-val { width: 30px; text-align: center; font-weight: 800; font-size: 15px; }
+        .sub-category { font-size: 0.8rem; color: #27ae60; margin: 15px 0 8px 5px; font-weight: bold; border-left: 4px solid #e67e22; padding-left: 8px; }
+        .menu-item { background: white; border-radius: 12px; padding: 12px 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .item-name { font-weight: bold; font-size: 0.95rem; }
+        .item-price { font-size: 0.8rem; color: #7f8c8d; margin-left: 5px; }
+        .controls { display: flex; align-items: center; gap: 12px; }
+        .btn { width: 32px; height: 32px; border-radius: 50%; border: none; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .btn-plus { background: #27ae60; color: white; }
+        .btn-minus { background: #f0f0f0; color: #999; }
+        .count { font-weight: bold; width: 20px; text-align: center; }
 
-        /* Unlimited Panel */
-        .unlimited-card { background: white; border-radius: 20px; padding: 40px 20px; margin-top: 20px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
-        .unlimited-badge { display: inline-block; padding: 6px 15px; background: #fff3e0; color: #e67e22; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 15px; }
-
-        /* Footer Result */
-        .footer { position: fixed; bottom: 0; width: 100%; background: var(--white); box-shadow: 0 -5px 20px rgba(0,0,0,0.05); padding: 15px 15px 30px; z-index: 100; border-radius: 20px 20px 0 0; }
-        .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 600px; margin: 0 auto 15px; }
-        .res-box { padding: 10px; border-radius: 12px; background: #f8f9f9; }
-        .res-lbl { font-size: 10px; color: var(--gray); font-weight: bold; margin-bottom: 2px; }
-        .res-val { font-size: 18px; font-weight: 800; }
+        .footer-result { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 2px solid #eee; padding: 15px 0 30px; z-index: 1000; }
+        .submit-btn { display: block; width: 90%; margin: 12px auto 0; background: #2c3e50; color: white; border: none; padding: 14px; font-size: 1rem; font-weight: bold; border-radius: 10px; }
         
-        .main-btn { width: 100%; max-width: 600px; margin: 0 auto; display: block; padding: 16px; border-radius: 14px; border: none; font-size: 16px; font-weight: 800; cursor: pointer; transition: 0.3s; }
-        .btn-submit { background: var(--text); color: white; }
-        .btn-submit:disabled { background: #ccc; opacity: 0.6; }
-        .controls-row { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; max-width: 600px; margin: 0 auto; }
-        .btn-edit { background: #f1f3f4; color: var(--text); }
-        .btn-settle { background: var(--primary); color: white; }
-
-        #loading { position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 2000; display: none; place-items: center; }
-        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #27ae60; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-<div id="loading"><div class="spinner"></div></div>
+<div id="loading-overlay"><div class="spinner"></div><div style="margin-top:10px;">読み込み中...</div></div>
 
 <div class="fixed-header">
     <header>
-        <img src="https://raw.githubusercontent.com/katsunorism/2026nyp/main/logo.jpg" class="header-logo" alt="logo">
-        <h1>2026 NYP OSAKA</h1>
+        <img src="https://raw.githubusercontent.com/katsunorism/2026nyp/main/logo.jpg" class="header-logo">
+        <h1>2026新年会 in 大阪</h1>
     </header>
-    <div class="user-selector-area">
-        <label class="label-sm">Who are you?</label>
-        <select id="user-select" onchange="onUserChanged()">
-            <option value="">名前を選択してください...</option>
-        </select>
+    <div class="login-section">
+        <label class="login-label">メンバーを選択してください</label>
+        <select id="user-select" onchange="checkUserStatus()"><option value="">読み込み中...</option></select>
     </div>
-    <div id="tabs-nav" class="tabs-nav"></div>
+    <div class="tabs-container" id="tabs-nav" style="display:none;"></div>
 </div>
 
 <div class="scrollable-content">
-    <div class="container">
-        <div id="unlimited-panel" style="display:none;">
-            <div class="unlimited-card">
-                <span class="unlimited-badge">FREE FLOW PLAN</span>
-                <h2 style="margin: 0 0 10px; color: var(--primary);">飲み放題プラン</h2>
-                <p style="font-size: 14px; line-height: 1.6; color: var(--gray);">
-                    会費 11,500円 のお支払いをお願いします。<br>精算後、下のボタンを押してください。
-                </p>
-            </div>
-        </div>
-        <div id="menu-container"></div>
+    <div id="unlimited-panel" style="display:none; text-align:center; padding:40px 20px;">
+        <h2 style="color:#27ae60;">飲み放題プラン</h2>
+        <p style="color:#666;">会費：11,500円を支払い後、<br>下の「精算する」ボタンを押してください。</p>
     </div>
+    <div class="container" id="menu-container"></div>
 </div>
 
-<div class="footer" id="footer" style="display:none;">
-    <div id="price-summary" class="result-grid">
-        <div class="res-box">
-            <div class="res-lbl">TOTAL</div>
-            <div class="res-val">¥<span id="display-total">0</span></div>
-        </div>
-        <div class="res-box">
-            <div id="status-label" class="res-lbl">BALANCE</div>
-            <div id="display-result" class="res-val" style="color:var(--primary);">0円</div>
-        </div>
+<div class="footer-result" id="footer-area" style="display:none;">
+    <div id="price-display-area" style="display:flex; justify-content:space-between; max-width:600px; margin:0 auto; padding:0 20px; align-items:center;">
+        <div><div style="font-size:0.7rem; color:#999;">合計</div><div style="font-size:1.2rem; font-weight:bold;">¥<span id="current-total">0</span></div></div>
+        <div style="text-align:right;"><span id="status-label" style="font-size:0.7rem; color:#e67e22;">差額</span><div id="final-result" style="font-size:1.4rem; font-weight:bold;">0円</div></div>
     </div>
     
-    <button id="btn-submit" class="main-btn btn-submit" onclick="handleOrder()">注文を確定して送信</button>
+    <button id="submit-btn" class="submit-btn" onclick="submitData()">注文内容を送信する</button>
     
-    <div id="post-submit-ui" style="display:none;" class="controls-row">
-        <button class="main-btn btn-edit" onclick="unlockEdit()">修正</button>
-        <button class="main-btn btn-settle" onclick="handleSettle()">精算する</button>
+    <div id="post-submit-controls" style="display:none; gap:10px; padding:0 20px; max-width:560px; margin:12px auto 0;">
+        <button id="edit-btn" onclick="enableEdit()" style="flex:1; padding:14px; border-radius:10px; background:#f39c12; color:white; border:none; font-weight:bold;">修正</button>
+        <button onclick="settleComplete()" style="flex:1; padding:14px; border-radius:10px; background:#27ae60; color:white; border:none; font-weight:bold;">精算する</button>
     </div>
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxQt1alhF0zQSt7VPtbedBlc33NlDQ-TfF6dP8BwQDzKuINJLwO10CRyiMFZkEOuSyHKw/exec";
-    const BUDGET = 2500;
-    
-    const menuStructure = [
-        { name: "カイピリーニャ", groups: [
-            { label: "Standard", items: [{n:"カイピリーニャ", p:1100},{n:"プレミアム", p:1400},{n:"泡盛カイピリーニャ", p:1100}] },
-            { label: "Fruit", items: [{n:"パイン&ジンジャー", p:1400},{n:"トマト&ハラペーニョ", p:1400},{n:"マラクジャ", p:1600},{n:"トロピカル", p:1700},{n:"ミックスベリー", p:1800}] }
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxQt1alhF0zQSt7VPtbedBlc33NlDQ-TfF6dP8BwQDzKuINJLwO10CRyiMFZkEOuSyHKw/exec";
+
+    const rawMenu = [
+        { tabName: "カイピリーニャ", groups: [
+            { label: "Standard", items: [{name:"カイピリーニャ", price:1100},{name:"プレミアム", price:1400},{name:"泡盛カイピリーニャ", price:1100}] },
+            { label: "Fruit", items: [{name:"パイン&ジンジャー", price:1400},{name:"トマト&ハラペーニョ", price:1400},{name:"マラクジャ", price:1600},{name:"トロピカル", price:1700},{name:"ミックスベリー", price:1800}] }
         ]},
-        { name: "ビール/サワー", groups: [
-            { label: "Beer", items: [{n:"生ハートランド", p:980},{n:"コロナ", p:990},{n:"ギネス", p:990},{n:"ブラジルビール", p:1600},{n:"グリーンズフリー", p:700}] },
-            { label: "High/Sour", items: [{n:"ニッカハイボール", p:1200},{n:"富士ハイボール", p:1200},{n:"山崎12年", p:2500},{n:"レモンサワー", p:850},{n:"マラクジャサワー", p:900},{n:"マテ茶ハイ", p:850}] }
+        { tabName: "ビール/サワー", groups: [
+            { label: "Beer", items: [{name:"生ハートランド", price:980},{name:"コロナ", price:990},{name:"ギネス", price:990},{name:"ブラジルビール", price:1600},{name:"グリーンズフリー", price:700}] },
+            { label: "Highball & Sour", items: [{name:"ニッカハイボール", price:1200},{name:"富士ハイボール", price:1200},{name:"山崎12年", price:2500},{name:"レモンサワー", price:850},{name:"マラクジャサワー", price:900},{name:"マテ茶ハイ", price:850}] }
         ]},
-        { name: "ワイン/他", groups: [
-            { label: "Wine", items: [{n:"スパークリング", p:1300},{n:"白ワイン", p:1300},{n:"赤ワイン", p:1300}] },
-            { label: "Cocktails", items: [{n:"トニック", p:900},{n:"ココ", p:1500},{n:"マラクジャ", p:1500}] }
+        { tabName: "ワイン/他", groups: [
+            { label: "Wine", items: [{name:"スパークリング", price:1300},{name:"白ワイン", price:1300},{name:"赤ワイン", price:1300}] },
+            { label: "Cocktails", items: [{name:"カシャーサトニック", price:900},{name:"バッチーダデココ", price:1500},{name:"バッチーダデマラクジャ", price:1500}] }
         ]},
-        { name: "ノンアル", groups: [
-            { label: "Mocktails", items: [{n:"フォーシーズンズ", p:1200},{n:"ピックフォード", p:1200},{n:"オリジナル", p:1200}] },
-            { label: "Soft", items: [{n:"各種ジュース", p:700},{n:"アサイー", p:750},{n:"伊良コーラ", p:900},{n:"富士ミネラル", p:900},{n:"ペリエ", p:600},{n:"カフェ/紅茶", p:550}] }
+        { tabName: "ノンアル", groups: [
+            { label: "Mocktails", items: [{name:"フォーシーズンズ", price:1200},{name:"メアリーピックフォード", price:1200},{name:"オリジナル", price:1200}] },
+            { label: "Soft Drink", items: [{name:"ジュース各種", price:700},{name:"マラクジャ/アサイー", price:750},{name:"伊良コーラ", price:900},{name:"富士ミネラル", price:900},{name:"スパークリング水", price:1000},{name:"ペリエ", price:600},{name:"カフェ/紅茶", price:550},{name:"カフェラテ", price:650}] }
         ]}
     ];
 
-    let cart = {};
-    let masterData = [];
+    // 「一覧」を最後に配置
+    const allGroups = [];
+    rawMenu.forEach(m => allGroups.push(...m.groups));
+    const menuData = [...rawMenu, { tabName: "一覧", groups: allGroups }];
+
+    const PREPAID_DRINK_BUDGET = 2500;
+    const cart = {};
+    let globalTotal = 0;
+    let userMasterData = [];
 
     window.onload = async () => {
-        buildUI();
-        await loadUsers();
+        initApp();
+        await fetchNames();
     };
 
-    function buildUI() {
+    function initApp() {
         const nav = document.getElementById('tabs-nav');
         const container = document.getElementById('menu-container');
         
-        // 全メニュー「一覧」タブを作成
-        const tabs = [{ name: "一覧", groups: menuStructure.flatMap(m => m.groups) }, ...menuStructure];
-        
-        tabs.forEach((tab, i) => {
-            const tBtn = document.createElement('div');
-            tBtn.className = `tab ${i===0?'active':''}`;
-            tBtn.id = `tab-btn-${i}`;
-            tBtn.textContent = tab.name;
-            tBtn.onclick = () => activateTab(i);
-            nav.appendChild(tBtn);
+        menuData.forEach((d, i) => {
+            const btn = document.createElement('div');
+            btn.className = 'tab'; btn.id = `tab-btn-${i}`; btn.textContent = d.tabName;
+            btn.onclick = () => switchTab(i);
+            nav.appendChild(btn);
 
-            const content = document.createElement('div');
-            content.className = `tab-content ${i===0?'active':''}`;
-            content.id = `tab-content-${i}`;
-            
-            tab.groups.forEach(g => {
-                const head = document.createElement('div');
-                head.className = 'category-title';
-                head.textContent = g.label;
-                content.appendChild(head);
-                
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'tab-content'; contentDiv.id = `content-${i}`;
+            d.groups.forEach(g => {
+                const subTitle = document.createElement('div');
+                subTitle.className = 'sub-category'; subTitle.textContent = g.label;
+                contentDiv.appendChild(subTitle);
                 g.items.forEach(item => {
-                    const id = `item-${item.n}-${item.p}`;
-                    if(!cart[id]) cart[id] = 0;
-                    
-                    const card = document.createElement('div');
-                    card.className = 'menu-card';
-                    card.id = `card-${i}-${id}`;
-                    card.innerHTML = `
-                        <div class="item-info">
-                            <span class="item-name">${item.n}</span>
-                            <span class="item-price">¥${item.p.toLocaleString()}</span>
-                        </div>
-                        <div class="counter">
-                            <button class="btn-qty btn-minus" onclick="updateQty('${id}', -1)">-</button>
-                            <span class="qty-val qty-${id}">0</span>
-                            <button class="btn-qty btn-plus" onclick="updateQty('${id}', 1)">+</button>
+                    const uniqueId = `item-${item.name}-${item.price}`;
+                    if (!cart[uniqueId]) cart[uniqueId] = 0;
+                    const div = document.createElement('div');
+                    div.className = 'menu-item';
+                    div.innerHTML = `
+                        <div><span class="item-name">${item.name}</span><span class="item-price">¥${item.price.toLocaleString()}</span></div>
+                        <div class="controls">
+                            <button class="btn btn-minus" onclick="upd('${uniqueId}', -1)">-</button>
+                            <span class="count class-${uniqueId}">0</span>
+                            <button class="btn btn-plus" onclick="upd('${uniqueId}', 1)">+</button>
                         </div>
                     `;
-                    content.appendChild(card);
+                    contentDiv.appendChild(div);
                 });
             });
-            container.appendChild(content);
+            container.appendChild(contentDiv);
         });
+        switchTab(0);
     }
 
-    async function loadUsers() {
-        toggleLoading(true);
+    async function fetchNames() {
+        showLoading();
         try {
-            const res = await fetch(`${API_URL}?action=getData`);
-            masterData = await res.json();
-            const sel = document.getElementById('user-select');
-            masterData.forEach(u => {
+            const response = await fetch(GAS_API_URL + "?action=getData");
+            userMasterData = await response.json();
+            const select = document.getElementById('user-select');
+            select.innerHTML = '<option value="">▼ 名前を選択してください</option>';
+            userMasterData.forEach(user => {
                 const opt = document.createElement('option');
-                opt.value = u.name;
-                opt.textContent = `${u.name}${u.isUnlimited ? ' 🥂' : ''}${u.status === '精算完了' ? ' (済)' : ''}`;
-                if (u.status === '精算完了') opt.disabled = true;
-                sel.appendChild(opt);
+                opt.value = user.name;
+                opt.textContent = user.name + (user.isUnlimited ? " (飲み放題)" : "") + (user.status === "精算完了" ? " (済)" : "");
+                if (user.status === "精算完了") opt.disabled = true;
+                select.appendChild(opt);
             });
-        } catch(e) { alert("名簿取得エラー"); }
-        toggleLoading(false);
+            hideLoading();
+        } catch (e) { hideLoading(); alert("名簿の読み込みに失敗しました"); }
     }
 
-    function onUserChanged() {
+    function checkUserStatus() {
         const name = document.getElementById('user-select').value;
-        const footer = document.getElementById('footer');
-        const nav = document.getElementById('tabs-nav');
-        if (!name) { footer.style.display = 'none'; nav.style.display = 'none'; return; }
+        if (!name) { document.getElementById('tabs-nav').style.display = 'none'; document.getElementById('footer-area').style.display = 'none'; return; }
 
-        const user = masterData.find(u => u.name === name);
-        const isUnlim = user.isUnlimited;
+        const user = userMasterData.find(u => u.name === name);
+        const isUnlimited = user.isUnlimited;
 
-        document.getElementById('unlimited-panel').style.display = isUnlim ? 'block' : 'none';
-        document.getElementById('menu-container').style.display = isUnlim ? 'none' : 'block';
-        nav.style.display = isUnlim ? 'none' : 'flex';
-        footer.style.display = 'block';
+        document.getElementById('unlimited-panel').style.display = isUnlimited ? 'block' : 'none';
+        document.getElementById('menu-container').style.display = isUnlimited ? 'none' : 'block';
+        document.getElementById('tabs-nav').style.display = isUnlimited ? 'none' : 'flex';
+        document.getElementById('footer-area').style.display = 'block';
+        document.getElementById('price-display-area').style.display = isUnlimited ? 'none' : 'flex';
+        document.getElementById('submit-btn').style.display = isUnlimited ? 'none' : 'block';
+        document.getElementById('post-submit-controls').style.display = isUnlimited ? 'flex' : 'none';
         
-        document.getElementById('price-summary').style.display = isUnlim ? 'none' : 'grid';
-        document.getElementById('btn-submit').style.display = isUnlim ? 'none' : 'block';
-        document.getElementById('post-submit-ui').style.display = isUnlim ? 'flex' : 'none';
-        
-        if(!isUnlim) calculate();
+        if (!isUnlimited) calc();
     }
 
-    function updateQty(id, delta) {
-        const newVal = Math.max(0, cart[id] + delta);
-        if (cart[id] === newVal) return;
-        cart[id] = newVal;
-        
-        // 全てのタブ内の同じ商品を更新
-        document.querySelectorAll(`.qty-${id}`).forEach(el => el.textContent = newVal);
-        document.querySelectorAll(`[id$='${id}']`).forEach(el => {
-            if(el.classList.contains('menu-card')) {
-                newVal > 0 ? el.classList.add('selected') : el.classList.remove('selected');
-            }
-        });
-        calculate();
+    function switchTab(idx) {
+        document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+        document.getElementById(`tab-btn-${idx}`).classList.add('active');
+        document.getElementById(`content-${idx}`).classList.add('active');
     }
 
-    function calculate() {
-        let total = 0;
-        // IDから価格を抽出して計算
+    function upd(id, chg) {
+        const currentCount = cart[id] || 0;
+        if (currentCount + chg < 0) return;
+        cart[id] = currentCount + chg;
+        document.querySelectorAll(`.class-${id}`).forEach(el => el.textContent = cart[id]);
+        calc();
+    }
+
+    function calc() {
+        globalTotal = 0;
         Object.keys(cart).forEach(id => {
             const price = parseInt(id.split('-').pop());
-            total += price * cart[id];
+            globalTotal += price * cart[id];
         });
-        
-        const balance = total - BUDGET;
-        document.getElementById('display-total').textContent = total.toLocaleString();
-        const resEl = document.getElementById('display-result');
-        const lblEl = document.getElementById('status-label');
-        
-        if (balance > 0) {
-            lblEl.textContent = "追加支払い";
-            resEl.textContent = `+${balance.toLocaleString()}円`;
-            resEl.style.color = "var(--danger)";
+        let bal = globalTotal - PREPAID_DRINK_BUDGET;
+        document.getElementById('current-total').textContent = globalTotal.toLocaleString();
+        const res = document.getElementById('final-result');
+        const lbl = document.getElementById('status-label');
+        if (bal > 0) {
+            lbl.textContent = "追加支払い";
+            res.textContent = `+${bal.toLocaleString()}円`; res.style.color = "#e74c3c";
         } else {
-            lblEl.textContent = "返金受取";
-            resEl.textContent = `${Math.abs(balance).toLocaleString()}円`;
-            resEl.style.color = "var(--primary)";
+            lbl.textContent = "返金受取";
+            res.textContent = `${Math.abs(bal).toLocaleString()}円`; res.style.color = "#2980b9";
         }
     }
 
-    async function handleOrder() {
+    async function submitData() {
         const name = document.getElementById('user-select').value;
-        const items = Object.keys(cart).filter(id => cart[id] > 0)
-                      .map(id => `${id.split('-')[1]}×${cart[id]}`).join(", ");
-        
-        if (!items) return alert("メニューを選んでください");
-        if (!confirm(`送信しますか？\n${items}`)) return;
-
-        toggleLoading(true);
+        const details = Object.keys(cart).filter(id => cart[id] > 0).map(id => `${id.split('-')[1]}x${cart[id]}`).join(", ");
+        if (globalTotal === 0) return alert("メニューを選択してください");
+        if (!confirm("注文内容を送信します。よろしいですか？")) return;
+        showLoading();
         try {
-            // total計算用
-            let total = 0;
-            Object.keys(cart).forEach(id => { total += parseInt(id.split('-').pop()) * cart[id]; });
-            
-            await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, details: items, total, action: "submit" }) });
-            document.getElementById('btn-submit').style.display = 'none';
-            document.getElementById('post-submit-ui').style.display = 'flex';
-            alert("送信成功！精算へお進みください。");
-        } catch(e) { alert("送信エラー"); }
-        toggleLoading(false);
+            await fetch(GAS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, details, total: globalTotal, action: "submit" }) });
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('post-submit-controls').style.display = 'flex';
+            hideLoading();
+            alert("送信しました。");
+        } catch (e) { hideLoading(); alert("エラー"); }
     }
 
-    async function handleSettle() {
+    async function settleComplete() {
         const name = document.getElementById('user-select').value;
         if (!confirm("精算を完了します。よろしいですか？")) return;
-        toggleLoading(true);
+        showLoading();
         try {
-            await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, action: "complete" }) });
+            await fetch(GAS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, action: "complete" }) });
             location.reload();
-        } catch(e) { alert("エラー"); }
-        toggleLoading(false);
+        } catch (e) { hideLoading(); alert("エラー"); }
     }
 
-    function activateTab(idx) {
-        document.querySelectorAll('.tab, .tab-content').forEach(el => el.classList.remove('active'));
-        document.getElementById(`tab-btn-${idx}`).classList.add('active');
-        document.getElementById(`tab-content-${idx}`).classList.add('active');
-    }
-
-    function toggleLoading(s) { document.getElementById('loading').style.display = s ? 'grid' : 'none'; }
-    function unlockEdit() { document.getElementById('btn-submit').style.display = 'block'; document.getElementById('post-submit-ui').style.display = 'none'; }
+    function showLoading() { document.getElementById('loading-overlay').style.display = 'flex'; }
+    function hideLoading() { document.getElementById('loading-overlay').style.display = 'none'; }
+    function enableEdit() { document.getElementById('submit-btn').style.display = 'block'; document.getElementById('post-submit-controls').style.display = 'none'; }
 </script>
 </body>
 </html>
