@@ -64,8 +64,14 @@
 
 <div class="footer-result" id="footer-area" style="display:none;">
     <div id="price-display-area" style="display:flex; justify-content:space-between; max-width:600px; margin:0 auto; padding:0 20px; align-items:center;">
-        <div><div style="font-size:0.7rem; color:#999;">合計</div><div style="font-size:1.2rem; font-weight:bold;">¥<span id="current-total">0</span></div></div>
-        <div style="text-align:right;"><span id="status-label" style="font-size:0.7rem; color:#e67e22;">差額</span><div id="final-result" style="font-size:1.4rem; font-weight:bold;">0円</div></div>
+        <div>
+            <div style="font-size:0.7rem; color:#999;">合計 (<span id="current-qty">0</span>点)</div>
+            <div style="font-size:1.2rem; font-weight:bold;">¥<span id="current-total">0</span></div>
+        </div>
+        <div style="text-align:right;">
+            <span id="status-label" style="font-size:0.7rem; color:#e67e22;">差額</span>
+            <div id="final-result" style="font-size:1.4rem; font-weight:bold;">0円</div>
+        </div>
     </div>
     <button id="submit-btn" class="submit-btn" onclick="submitData()">注文内容を送信する</button>
     <div id="post-submit-controls" style="display:none; gap:10px; padding:0 20px; max-width:560px; margin:12px auto 0;">
@@ -105,9 +111,9 @@
     const PREPAID_DRINK_BUDGET = 2500;
     const cart = {};
     let globalTotal = 0;
+    let globalQty = 0;
     let userMasterData = [];
 
-    // クラス名用に記号を完全排除する正規化
     function normalizeId(text) {
         return "cls-" + btoa(unescape(encodeURIComponent(text))).replace(/[^a-zA-Z0-9]/g, "");
     }
@@ -122,13 +128,11 @@
         const container = document.getElementById('menu-container');
         
         menuData.forEach((d, i) => {
-            // タブ
             const btn = document.createElement('div');
             btn.className = 'tab'; btn.id = `tab-btn-${i}`; btn.textContent = d.tabName;
             btn.onclick = () => switchTab(i);
             nav.appendChild(btn);
 
-            // コンテンツ
             const contentDiv = document.createElement('div');
             contentDiv.className = 'tab-content'; contentDiv.id = `tab-content-${i}`;
             
@@ -170,7 +174,6 @@
             userMasterData = await response.json();
             const select = document.getElementById('user-select');
             select.innerHTML = '<option value="">▼ 名前を選択してください</option>';
-            
             const incomplete = userMasterData.filter(u => u.status !== "精算完了");
             const complete = userMasterData.filter(u => u.status === "精算完了");
             
@@ -215,7 +218,7 @@
             document.getElementById('price-display-area').style.display = 'flex';
             document.getElementById('submit-btn').style.display = 'block';
             document.getElementById('post-submit-controls').style.display = 'none';
-            document.getElementById('edit-btn').style.display = 'block';
+            document.getElementById('edit-btn').style.block;
             calc();
         }
     }
@@ -239,12 +242,17 @@
 
     function calc() {
         globalTotal = 0;
+        globalQty = 0;
         Object.keys(cart).forEach(key => {
             const price = parseInt(key.split('-').pop());
             globalTotal += price * cart[key];
+            globalQty += cart[key];
         });
         let bal = globalTotal - PREPAID_DRINK_BUDGET;
+        
         document.getElementById('current-total').textContent = globalTotal.toLocaleString();
+        document.getElementById('current-qty').textContent = globalQty; // 下部エリアに点数を表示
+        
         const res = document.getElementById('final-result');
         const lbl = document.getElementById('status-label');
         if (bal > 0) {
@@ -260,20 +268,16 @@
         const name = document.getElementById('user-select').value;
         if (globalTotal === 0) return alert("メニューを選択してください");
 
-        // --- 確認ダイアログのメッセージ構築 ---
         let confirmMsg = "以下の内容で送信します。よろしいですか？\n\n";
-        let totalQty = 0;
         Object.keys(cart).forEach(key => {
             if (cart[key] > 0) {
                 const [itemName, price] = key.split('-');
                 confirmMsg += `${itemName} (${parseInt(price).toLocaleString()}円) × ${cart[key]}点\n`;
-                totalQty += cart[key];
             }
         });
         confirmMsg += `\n------------------------\n`;
-        confirmMsg += `合計点数：${totalQty}点\n`;
+        confirmMsg += `合計点数：${globalQty}点\n`;
         confirmMsg += `合計金額：${globalTotal.toLocaleString()}円`;
-        // ------------------------------------
 
         if (!confirm(confirmMsg)) return;
 
