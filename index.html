@@ -14,11 +14,12 @@
         .login-label { font-size: 0.75rem; font-weight: bold; margin-bottom: 5px; display: block; color: #e67e22; }
         select { width: 100%; padding: 10px; font-size: 1rem; border: 2px solid #27ae60; border-radius: 8px; background: #fff; appearance: none; }
         select option:disabled { color: #ccc; background-color: #f5f5f5; }
-        .tabs-container { overflow-x: auto; white-space: nowrap; border-bottom: 1px solid #ddd; background: #fff; display: flex; }
+        /* タブナビゲーション：初期は非表示 */
+        .tabs-container { overflow-x: auto; white-space: nowrap; border-bottom: 1px solid #ddd; background: #fff; display: none; }
         .tab { padding: 12px 20px; font-size: 0.85rem; font-weight: bold; color: #95a5a6; cursor: pointer; border-bottom: 3px solid transparent; flex-shrink: 0; }
         .tab.active { color: #27ae60; border-bottom-color: #27ae60; }
-        .scrollable-content { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: 200px; padding-bottom: 180px; box-sizing: border-box; }
-        .container { max-width: 600px; margin: 0 auto; padding: 10px; }
+        .scrollable-content { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: 150px; padding-bottom: 180px; box-sizing: border-box; }
+        .container { max-width: 600px; margin: 0 auto; padding: 10px; display: none; } /* メニューコンテナ：初期は非表示 */
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .sub-category { font-size: 0.85rem; color: #27ae60; margin: 20px 0 10px 5px; font-weight: bold; border-left: 4px solid #e67e22; padding-left: 8px; }
@@ -72,7 +73,7 @@
         <label class="login-label">メンバーを選択してください</label>
         <select id="user-select" onchange="checkUserStatus()"><option value="">読み込み中...</option></select>
     </div>
-    <div class="tabs-container" id="tabs-nav" style="display:none;"></div>
+    <div class="tabs-container" id="tabs-nav"></div>
 </div>
 
 <div class="scrollable-content" id="scroll-area">
@@ -81,6 +82,9 @@
         <p style="color:#666;">会費：11,500円を支払い後、<br>下の「精算する」ボタンを押してください。</p>
     </div>
     <div class="container" id="menu-container"></div>
+    <div id="welcome-message" style="text-align:center; padding:50px 20px; color:#999;">
+        <p>名前を選択すると<br>メニューが表示されます</p>
+    </div>
 </div>
 
 <div class="footer-result" id="footer-area" style="display:none;">
@@ -102,7 +106,7 @@
 </div>
 
 <script>
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyfHNr2TF7MKL_CKT55-8JR7V1ag3LbGaZV-xUlJkxLa-RpKzthli5orC4X8wrMbO20qQ/exec";
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwrfJjY0RfBfErd7CrWswQlqqn9hEPtUo-izmxr37EOfb6H3E6RcFqHdcWedBwTC6_8Fw/exec";
 
     const rawMenu = [
         { tabName: "カイピリーニャ", groups: [
@@ -217,17 +221,32 @@
 
     function checkUserStatus() {
         const name = document.getElementById('user-select').value;
+        const welcome = document.getElementById('welcome-message');
+        const tabs = document.getElementById('tabs-nav');
+        const menu = document.getElementById('menu-container');
+        const footer = document.getElementById('footer-area');
+        const unlimited = document.getElementById('unlimited-panel');
+        const scrollArea = document.getElementById('scroll-area');
+
         if (!name) { 
-            document.getElementById('tabs-nav').style.display = 'none'; 
-            document.getElementById('footer-area').style.display = 'none'; 
+            welcome.style.display = 'block';
+            tabs.style.display = 'none'; 
+            menu.style.display = 'none';
+            footer.style.display = 'none'; 
+            unlimited.style.display = 'none';
+            scrollArea.style.paddingTop = '150px';
             return; 
         }
+
+        welcome.style.display = 'none';
         const user = userMasterData.find(u => u.name === name);
         const isUnlimited = user.isUnlimited;
-        document.getElementById('unlimited-panel').style.display = isUnlimited ? 'block' : 'none';
-        document.getElementById('menu-container').style.display = isUnlimited ? 'none' : 'block';
-        document.getElementById('tabs-nav').style.display = isUnlimited ? 'none' : 'flex';
-        document.getElementById('footer-area').style.display = 'block';
+
+        unlimited.style.display = isUnlimited ? 'block' : 'none';
+        menu.style.display = isUnlimited ? 'none' : 'block';
+        tabs.style.display = isUnlimited ? 'none' : 'flex';
+        footer.style.display = 'block';
+        scrollArea.style.paddingTop = isUnlimited ? '150px' : '200px';
 
         if (isUnlimited) {
             document.getElementById('price-display-area').style.display = 'none';
@@ -239,7 +258,6 @@
             document.getElementById('price-display-area').style.display = 'flex';
             document.getElementById('submit-btn').style.display = 'block';
             document.getElementById('post-submit-controls').style.display = 'none';
-            document.getElementById('edit-btn').style.block;
             calc();
         }
     }
@@ -285,7 +303,6 @@
         }
     }
 
-    // モーダル操作用
     function openModal(content) {
         document.getElementById('modal-content').textContent = content;
         document.getElementById('custom-modal').style.display = 'flex';
@@ -348,4 +365,3 @@
 </script>
 </body>
 </html>
-
