@@ -107,8 +107,9 @@
     let globalTotal = 0;
     let userMasterData = [];
 
-    function normalizeId(name) {
-        return "id-" + btoa(unescape(encodeURIComponent(name))).replace(/=/g, "");
+    // ID正規化（さらに安全に記号を完全排除）
+    function normalizeId(text) {
+        return "id-" + btoa(unescape(encodeURIComponent(text))).replace(/[^a-zA-Z0-9]/g, "");
     }
 
     window.onload = async () => {
@@ -120,23 +121,26 @@
         const nav = document.getElementById('tabs-nav');
         const container = document.getElementById('menu-container');
         menuData.forEach((d, i) => {
+            const safeTabId = "tab-content-" + i;
+            
             const btn = document.createElement('div');
             btn.className = 'tab'; btn.id = `tab-btn-${i}`; btn.textContent = d.tabName;
             btn.onclick = () => switchTab(i);
             nav.appendChild(btn);
+
             const contentDiv = document.createElement('div');
-            contentDiv.className = 'tab-content'; contentDiv.id = `content-${i}`;
+            contentDiv.className = 'tab-content'; contentDiv.id = safeTabId;
             d.groups.forEach(g => {
                 const subTitle = document.createElement('div');
                 subTitle.className = 'sub-category'; subTitle.textContent = g.label;
                 contentDiv.appendChild(subTitle);
                 g.items.forEach(item => {
                     const uniqueKey = `${item.name}-${item.price}`;
-                    const safeId = normalizeId(uniqueKey);
+                    const safeClass = normalizeId(uniqueKey);
                     if (!cart[uniqueKey]) cart[uniqueKey] = 0;
                     const div = document.createElement('div');
                     div.className = 'menu-item';
-                    div.innerHTML = `<div class="item-info"><span class="item-name">${item.name}</span><span class="item-price">¥${item.price.toLocaleString()}</span></div><div class="controls"><button class="btn btn-minus" onclick="upd('${uniqueKey}', -1)">-</button><span class="count ${safeId}">0</span><button class="btn btn-plus" onclick="upd('${uniqueKey}', 1)">+</button></div>`;
+                    div.innerHTML = `<div class="item-info"><span class="item-name">${item.name}</span><span class="item-price">¥${item.price.toLocaleString()}</span></div><div class="controls"><button class="btn btn-minus" onclick="upd('${uniqueKey}', -1)">-</button><span class="count ${safeClass}">0</span><button class="btn btn-plus" onclick="upd('${uniqueKey}', 1)">+</button></div>`;
                     contentDiv.appendChild(div);
                 });
             });
@@ -204,7 +208,7 @@
         document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
         document.getElementById(`tab-btn-${idx}`).classList.add('active');
-        document.getElementById(`content-${idx}`).classList.add('active');
+        document.getElementById(`tab-content-${idx}`).classList.add('active');
         document.getElementById('scroll-area').scrollTop = 0;
     }
 
@@ -212,8 +216,8 @@
         const currentCount = cart[key] || 0;
         if (currentCount + chg < 0) return;
         cart[key] = currentCount + chg;
-        const safeId = normalizeId(key);
-        document.querySelectorAll(`.${safeId}`).forEach(el => { el.textContent = cart[key]; });
+        const safeClass = normalizeId(key);
+        document.querySelectorAll(`.${safeClass}`).forEach(el => { el.textContent = cart[key]; });
         calc();
     }
 
@@ -239,8 +243,6 @@
     async function submitData() {
         const name = document.getElementById('user-select').value;
         if (globalTotal === 0) return alert("メニューを選択してください");
-
-        // --- 確認メッセージの作成 ---
         let confirmMsg = "以下の内容で注文を送信します。よろしいですか？\n\n";
         Object.keys(cart).forEach(key => {
             if (cart[key] > 0) {
@@ -249,12 +251,8 @@
             }
         });
         confirmMsg += `\n合計：${globalTotal.toLocaleString()}円`;
-        // ---------------------------
-
         if (!confirm(confirmMsg)) return;
-
         const details = Object.keys(cart).filter(key => cart[key] > 0).map(key => `${key.split('-')[0]}x${cart[key]}`).join(", ");
-        
         showLoading();
         try {
             await fetch(GAS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, details, total: globalTotal, action: "submit" }) });
@@ -268,15 +266,12 @@
     async function settleComplete() {
         const name = document.getElementById('user-select').value;
         const user = userMasterData.find(u => u.name === name);
-        const isUnlimited = user.isUnlimited;
-
         if (!confirm("精算を完了します。よろしいですか？")) return;
-        
         showLoading();
         try {
             await fetch(GAS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, action: "complete" }) });
             hideLoading();
-            if (isUnlimited) {
+            if (user.isUnlimited) {
                 alert("精算完了しました！楽しい新年会になりますように！");
             } else {
                 alert("精算完了しました！次回のオフ会で再見！");
