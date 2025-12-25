@@ -238,9 +238,23 @@
 
     async function submitData() {
         const name = document.getElementById('user-select').value;
-        const details = Object.keys(cart).filter(key => cart[key] > 0).map(key => `${key.split('-')[0]}x${cart[key]}`).join(", ");
         if (globalTotal === 0) return alert("メニューを選択してください");
-        if (!confirm("注文内容を送信します。よろしいですか？")) return;
+
+        // --- 確認メッセージの作成 ---
+        let confirmMsg = "以下の内容で注文を送信します。よろしいですか？\n\n";
+        Object.keys(cart).forEach(key => {
+            if (cart[key] > 0) {
+                const [itemName, price] = key.split('-');
+                confirmMsg += `${itemName}　${parseInt(price).toLocaleString()}円 x ${cart[key]}\n`;
+            }
+        });
+        confirmMsg += `\n合計：${globalTotal.toLocaleString()}円`;
+        // ---------------------------
+
+        if (!confirm(confirmMsg)) return;
+
+        const details = Object.keys(cart).filter(key => cart[key] > 0).map(key => `${key.split('-')[0]}x${cart[key]}`).join(", ");
+        
         showLoading();
         try {
             await fetch(GAS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, details, total: globalTotal, action: "submit" }) });
@@ -262,14 +276,11 @@
         try {
             await fetch(GAS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, action: "complete" }) });
             hideLoading();
-            
-            // メッセージの出し分けロジック
             if (isUnlimited) {
                 alert("精算完了しました！楽しい新年会になりますように！");
             } else {
                 alert("精算完了しました！次回のオフ会で再見！");
             }
-            
             location.reload();
         } catch (e) { hideLoading(); alert("通信エラーが発生しました。"); }
     }
