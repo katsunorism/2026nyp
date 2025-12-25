@@ -13,16 +13,19 @@
         .login-section { padding: 12px 15px; border-bottom: 1px solid #eee; }
         .login-label { font-size: 0.75rem; font-weight: bold; margin-bottom: 5px; display: block; color: #e67e22; }
         select { width: 100%; padding: 10px; font-size: 1rem; border: 2px solid #27ae60; border-radius: 8px; background: #fff; appearance: none; }
-        select option:disabled { color: #ccc; background-color: #f5f5f5; }
+        select:disabled { background: #f0f0f0; border-color: #ccc; color: #666; }
+        
         .tabs-container { overflow-x: auto; white-space: nowrap; border-bottom: 1px solid #ddd; background: #fff; display: none; }
         .tab { padding: 12px 20px; font-size: 0.85rem; font-weight: bold; color: #95a5a6; cursor: pointer; border-bottom: 3px solid transparent; flex-shrink: 0; }
         .tab.active { color: #27ae60; border-bottom-color: #27ae60; }
-        .scrollable-content { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: 150px; padding-bottom: 180px; box-sizing: border-box; position: relative; }
+        
+        .scrollable-content { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: 150px; padding-bottom: 180px; box-sizing: border-box; }
         .container { max-width: 600px; margin: 0 auto; padding: 10px; display: none; }
         
-        /* 画面ロック用のスタイル */
-        .lock-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(248, 252, 249, 0.6); z-index: 1500; display: none; pointer-events: auto; cursor: not-allowed; }
-        .locked { pointer-events: none !important; opacity: 0.6; }
+        /* 確認画面用スタイル */
+        #summary-view { display: none; padding: 20px; background: white; border-radius: 15px; margin: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 2px solid #27ae60; }
+        .summary-title { font-weight: bold; color: #27ae60; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; text-align: center; }
+        .summary-item { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.95rem; }
 
         .tab-content { display: none; }
         .tab-content.active { display: block; }
@@ -36,6 +39,7 @@
         .btn-plus { background: #27ae60; color: white; }
         .btn-minus { background: #f0f0f0; color: #999; }
         .count { font-weight: bold; width: 20px; text-align: center; }
+        
         .footer-result { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 2px solid #eee; padding: 15px 0 30px; z-index: 1000; }
         .submit-btn { display: block; width: 90%; margin: 12px auto 0; background: #2c3e50; color: white; border: none; padding: 14px; font-size: 1rem; font-weight: bold; border-radius: 10px; }
         #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; }
@@ -80,12 +84,16 @@
 </div>
 
 <div class="scrollable-content" id="scroll-area">
-    <div id="ui-lock" class="lock-overlay"></div>
-    
     <div id="unlimited-panel" style="display:none; text-align:center; padding:40px 20px;">
         <h2 style="color:#27ae60;">飲み放題プラン</h2>
         <p style="color:#666;">会費：11,500円を支払い後、<br>下の「精算する」ボタンを押してください。</p>
     </div>
+
+    <div id="summary-view">
+        <div class="summary-title">送信済みの注文内容</div>
+        <div id="summary-list"></div>
+    </div>
+
     <div class="container" id="menu-container"></div>
 </div>
 
@@ -227,17 +235,17 @@
         const menu = document.getElementById('menu-container');
         const footer = document.getElementById('footer-area');
         const unlimited = document.getElementById('unlimited-panel');
-        const scrollArea = document.getElementById('scroll-area');
+        const summary = document.getElementById('summary-view');
 
-        // 名前を切り替える際は一旦ロックを解除
-        disableLock();
+        // 名前を切り替える際は編集モードに戻す
+        enableEditModeUI();
 
         if (!name) { 
             tabs.style.display = 'none'; 
             menu.style.display = 'none';
             footer.style.display = 'none'; 
             unlimited.style.display = 'none';
-            scrollArea.style.paddingTop = '150px';
+            summary.style.display = 'none';
             return; 
         }
 
@@ -248,7 +256,6 @@
         menu.style.display = isUnlimited ? 'none' : 'block';
         tabs.style.display = isUnlimited ? 'none' : 'flex';
         footer.style.display = 'block';
-        scrollArea.style.paddingTop = isUnlimited ? '150px' : '200px';
 
         if (isUnlimited) {
             document.getElementById('price-display-area').style.display = 'none';
@@ -337,15 +344,40 @@
         showLoading();
         try {
             await fetch(GAS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, details, total: globalTotal, action: "submit" }) });
-            document.getElementById('submit-btn').style.display = 'none';
-            document.getElementById('post-submit-controls').style.display = 'flex';
             
-            // 画面をロック
-            enableLock();
-            
+            // UIを確定（確認）モードへ
+            setSummaryView();
+
             hideLoading();
             alert("送信完了しました！このまま「精算する」ボタンへお進みください。");
         } catch (e) { hideLoading(); alert("エラー"); }
+    }
+
+    function setSummaryView() {
+        const list = document.getElementById('summary-list');
+        list.innerHTML = '';
+        Object.keys(cart).forEach(key => {
+            if (cart[key] > 0) {
+                const [itemName, price] = key.split('-');
+                const div = document.createElement('div');
+                div.className = 'summary-item';
+                div.innerHTML = `<span>${itemName} × ${cart[key]}</span><span>\${(parseInt(price)*cart[key]).toLocaleString()}円</span>`;
+                list.appendChild(div);
+            }
+        });
+
+        document.getElementById('summary-view').style.display = 'block';
+        document.getElementById('menu-container').style.display = 'none';
+        document.getElementById('tabs-nav').style.display = 'none';
+        document.getElementById('user-select').disabled = true;
+        document.getElementById('submit-btn').style.display = 'none';
+        document.getElementById('post-submit-controls').style.display = 'flex';
+    }
+
+    function enableEditModeUI() {
+        document.getElementById('summary-view').style.display = 'none';
+        document.getElementById('user-select').disabled = false;
+        // checkUserStatus側でmenu-containerやtabs-navの表示は再制御される
     }
 
     async function settleComplete() {
@@ -356,35 +388,19 @@
         try {
             await fetch(GAS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, action: "complete" }) });
             hideLoading();
-            if (user && user.isUnlimited) {
-                alert("精算完了しました！楽しい新年会になりますように！");
-            } else {
-                alert("精算完了しました！次回のオフ会で再見！");
-            }
+            alert("精算完了しました！");
             location.reload();
         } catch (e) { hideLoading(); alert("エラー"); }
-    }
-
-    function enableLock() {
-        document.getElementById('ui-lock').style.display = 'block';
-        document.getElementById('tabs-nav').classList.add('locked');
-        document.getElementById('menu-container').classList.add('locked');
-        document.getElementById('user-select').disabled = true;
-    }
-
-    function disableLock() {
-        document.getElementById('ui-lock').style.display = 'none';
-        document.getElementById('tabs-nav').classList.remove('locked');
-        document.getElementById('menu-container').classList.remove('locked');
-        document.getElementById('user-select').disabled = false;
     }
 
     function showLoading() { document.getElementById('loading-overlay').style.display = 'flex'; }
     function hideLoading() { document.getElementById('loading-overlay').style.display = 'none'; }
     
     function enableEdit() { 
-        // ロックを解除して編集可能にする
-        disableLock();
+        enableEditModeUI();
+        const user = userMasterData.find(u => u.name === document.getElementById('user-select').value);
+        document.getElementById('menu-container').style.display = 'block';
+        document.getElementById('tabs-nav').style.display = 'flex';
         document.getElementById('submit-btn').style.display = 'block'; 
         document.getElementById('post-submit-controls').style.display = 'none'; 
     }
