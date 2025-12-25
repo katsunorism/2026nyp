@@ -17,8 +17,13 @@
         .tabs-container { overflow-x: auto; white-space: nowrap; border-bottom: 1px solid #ddd; background: #fff; display: none; }
         .tab { padding: 12px 20px; font-size: 0.85rem; font-weight: bold; color: #95a5a6; cursor: pointer; border-bottom: 3px solid transparent; flex-shrink: 0; }
         .tab.active { color: #27ae60; border-bottom-color: #27ae60; }
-        .scrollable-content { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: 150px; padding-bottom: 180px; box-sizing: border-box; }
+        .scrollable-content { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: 150px; padding-bottom: 180px; box-sizing: border-box; position: relative; }
         .container { max-width: 600px; margin: 0 auto; padding: 10px; display: none; }
+        
+        /* 画面ロック用のスタイル */
+        .lock-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(248, 252, 249, 0.6); z-index: 1500; display: none; pointer-events: auto; cursor: not-allowed; }
+        .locked { pointer-events: none !important; opacity: 0.6; }
+
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .sub-category { font-size: 0.85rem; color: #27ae60; margin: 20px 0 10px 5px; font-weight: bold; border-left: 4px solid #e67e22; padding-left: 8px; }
@@ -75,6 +80,8 @@
 </div>
 
 <div class="scrollable-content" id="scroll-area">
+    <div id="ui-lock" class="lock-overlay"></div>
+    
     <div id="unlimited-panel" style="display:none; text-align:center; padding:40px 20px;">
         <h2 style="color:#27ae60;">飲み放題プラン</h2>
         <p style="color:#666;">会費：11,500円を支払い後、<br>下の「精算する」ボタンを押してください。</p>
@@ -222,6 +229,9 @@
         const unlimited = document.getElementById('unlimited-panel');
         const scrollArea = document.getElementById('scroll-area');
 
+        // 名前を切り替える際は一旦ロックを解除
+        disableLock();
+
         if (!name) { 
             tabs.style.display = 'none'; 
             menu.style.display = 'none';
@@ -329,6 +339,10 @@
             await fetch(GAS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, details, total: globalTotal, action: "submit" }) });
             document.getElementById('submit-btn').style.display = 'none';
             document.getElementById('post-submit-controls').style.display = 'flex';
+            
+            // 画面をロック
+            enableLock();
+            
             hideLoading();
             alert("送信完了しました！このまま「精算する」ボタンへお進みください。");
         } catch (e) { hideLoading(); alert("エラー"); }
@@ -351,9 +365,29 @@
         } catch (e) { hideLoading(); alert("エラー"); }
     }
 
+    function enableLock() {
+        document.getElementById('ui-lock').style.display = 'block';
+        document.getElementById('tabs-nav').classList.add('locked');
+        document.getElementById('menu-container').classList.add('locked');
+        document.getElementById('user-select').disabled = true;
+    }
+
+    function disableLock() {
+        document.getElementById('ui-lock').style.display = 'none';
+        document.getElementById('tabs-nav').classList.remove('locked');
+        document.getElementById('menu-container').classList.remove('locked');
+        document.getElementById('user-select').disabled = false;
+    }
+
     function showLoading() { document.getElementById('loading-overlay').style.display = 'flex'; }
     function hideLoading() { document.getElementById('loading-overlay').style.display = 'none'; }
-    function enableEdit() { document.getElementById('submit-btn').style.display = 'block'; document.getElementById('post-submit-controls').style.display = 'none'; }
+    
+    function enableEdit() { 
+        // ロックを解除して編集可能にする
+        disableLock();
+        document.getElementById('submit-btn').style.display = 'block'; 
+        document.getElementById('post-submit-controls').style.display = 'none'; 
+    }
 </script>
 </body>
 </html>
