@@ -36,11 +36,32 @@
         #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; }
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #27ae60; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* カスタムモーダル用CSS */
+        #custom-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; justify-content: center; align-items: center; }
+        .modal-card { background: white; width: 85%; max-width: 400px; max-height: 80%; border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; }
+        .modal-header { padding: 15px; border-bottom: 1px solid #eee; font-weight: bold; text-align: center; }
+        .modal-body { padding: 15px; overflow-y: auto; font-size: 0.9rem; line-height: 1.6; white-space: pre-wrap; }
+        .modal-footer { display: flex; border-top: 1px solid #eee; }
+        .modal-btn { flex: 1; padding: 15px; border: none; background: none; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        .modal-btn-cancel { color: #666; border-right: 1px solid #eee; }
+        .modal-btn-ok { color: #27ae60; }
     </style>
 </head>
 <body>
 
 <div id="loading-overlay"><div class="spinner"></div><div style="margin-top:10px;">読み込み中...</div></div>
+
+<div id="custom-modal">
+    <div class="modal-card">
+        <div class="modal-header">注文内容の確認</div>
+        <div class="modal-body" id="modal-content"></div>
+        <div class="modal-footer">
+            <button class="modal-btn modal-btn-cancel" onclick="closeModal()">キャンセル</button>
+            <button class="modal-btn modal-btn-ok" onclick="executeSubmit()">送信する</button>
+        </div>
+    </div>
+</div>
 
 <div class="fixed-header">
     <header>
@@ -66,7 +87,7 @@
     <div id="price-display-area" style="display:flex; justify-content:space-between; max-width:600px; margin:0 auto; padding:0 20px; align-items:center;">
         <div>
             <div style="font-size:0.7rem; color:#999;">合計 (<span id="current-qty">0</span>点)</div>
-            <div style="font-size:1.2rem; font-weight:bold;">¥<span id="current-total">0</span></div>
+            <div style="font-size:1.2rem; font-weight:bold;">\<span id="current-total">0</span></div>
         </div>
         <div style="text-align:right;">
             <span id="status-label" style="font-size:0.7rem; color:#e67e22;">差額</span>
@@ -81,7 +102,7 @@
 </div>
 
 <script>
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwrfJjY0RfBfErd7CrWswQlqqn9hEPtUo-izmxr37EOfb6H3E6RcFqHdcWedBwTC6_8Fw/exec";
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwzBXK9d9b-3Y3ncQ7dg7S4Gt86HrxCafzOpNr9FYWDGNhS5TV9icmgsl6nbSJBu_TKpA/exec";
 
     const rawMenu = [
         { tabName: "カイピリーニャ", groups: [
@@ -151,7 +172,7 @@
                     div.innerHTML = `
                         <div class="item-info">
                             <span class="item-name">${item.name}</span>
-                            <span class="item-price">¥${item.price.toLocaleString()}</span>
+                            <span class="item-price">\${item.price.toLocaleString()}</span>
                         </div>
                         <div class="controls">
                             <button class="btn btn-minus" onclick="upd('${uniqueKey}', -1)">-</button>
@@ -251,7 +272,7 @@
         let bal = globalTotal - PREPAID_DRINK_BUDGET;
         
         document.getElementById('current-total').textContent = globalTotal.toLocaleString();
-        document.getElementById('current-qty').textContent = globalQty; // 下部エリアに点数を表示
+        document.getElementById('current-qty').textContent = globalQty; 
         
         const res = document.getElementById('final-result');
         const lbl = document.getElementById('status-label');
@@ -264,8 +285,16 @@
         }
     }
 
-    async function submitData() {
-        const name = document.getElementById('user-select').value;
+    // モーダル操作用
+    function openModal(content) {
+        document.getElementById('modal-content').textContent = content;
+        document.getElementById('custom-modal').style.display = 'flex';
+    }
+    function closeModal() {
+        document.getElementById('custom-modal').style.display = 'none';
+    }
+
+    function submitData() {
         if (globalTotal === 0) return alert("メニューを選択してください");
 
         let confirmMsg = "以下の内容で送信します。よろしいですか？\n\n";
@@ -279,8 +308,12 @@
         confirmMsg += `合計点数：${globalQty}点\n`;
         confirmMsg += `合計金額：${globalTotal.toLocaleString()}円`;
 
-        if (!confirm(confirmMsg)) return;
+        openModal(confirmMsg);
+    }
 
+    async function executeSubmit() {
+        closeModal();
+        const name = document.getElementById('user-select').value;
         const details = Object.keys(cart).filter(key => cart[key] > 0).map(key => `${key.split('-')[0]}x${cart[key]}`).join(", ");
         showLoading();
         try {
