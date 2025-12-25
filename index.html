@@ -22,7 +22,6 @@
         .scrollable-content { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: 150px; padding-bottom: 180px; box-sizing: border-box; }
         .container { max-width: 600px; margin: 0 auto; padding: 10px; display: none; }
         
-        /* 確認画面用スタイル */
         #summary-view { display: none; padding: 20px; background: white; border-radius: 15px; margin: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 2px solid #27ae60; }
         .summary-title { font-weight: bold; color: #27ae60; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; text-align: center; }
         .summary-item { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.95rem; }
@@ -186,7 +185,7 @@
                     div.innerHTML = `
                         <div class="item-info">
                             <span class="item-name">${item.name}</span>
-                            <span class="item-price">\${item.price.toLocaleString()}</span>
+                            <span class="item-price">${item.price.toLocaleString()}円</span>
                         </div>
                         <div class="controls">
                             <button class="btn btn-minus" onclick="upd('${uniqueKey}', -1)">-</button>
@@ -237,7 +236,6 @@
         const unlimited = document.getElementById('unlimited-panel');
         const summary = document.getElementById('summary-view');
 
-        // 名前を切り替える際は編集モードに戻す
         enableEditModeUI();
 
         if (!name) { 
@@ -292,7 +290,8 @@
         globalTotal = 0;
         globalQty = 0;
         Object.keys(cart).forEach(key => {
-            const price = parseInt(key.split('-').pop());
+            const parts = key.split('-');
+            const price = parseInt(parts[parts.length - 1]);
             globalTotal += price * cart[key];
             globalQty += cart[key];
         });
@@ -326,8 +325,10 @@
         let confirmMsg = "以下の内容で送信します。よろしいですか？\n\n";
         Object.keys(cart).forEach(key => {
             if (cart[key] > 0) {
-                const [itemName, price] = key.split('-');
-                confirmMsg += `${itemName} (${parseInt(price).toLocaleString()}円) × ${cart[key]}点\n`;
+                const parts = key.split('-');
+                const price = parseInt(parts[parts.length - 1]);
+                const name = parts.slice(0, -1).join('-');
+                confirmMsg += `${name} (${price.toLocaleString()}円) × ${cart[key]}点\n`;
             }
         });
         confirmMsg += `\n------------------------\n`;
@@ -340,14 +341,17 @@
     async function executeSubmit() {
         closeModal();
         const name = document.getElementById('user-select').value;
-        const details = Object.keys(cart).filter(key => cart[key] > 0).map(key => `${key.split('-')[0]}x${cart[key]}`).join(", ");
+        const details = Object.keys(cart).filter(key => cart[key] > 0).map(key => {
+            const parts = key.split('-');
+            return `${parts.slice(0, -1).join('-')}x${cart[key]}`;
+        }).join(", ");
         showLoading();
         try {
             await fetch(GAS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, details, total: globalTotal, action: "submit" }) });
             
-            // UIを確定（確認）モードへ
             setSummaryView();
-
+            document.getElementById('scroll-area').scrollTop = 0; // スクロールを一番上にセット
+            
             hideLoading();
             alert("送信完了しました！このまま「精算する」ボタンへお進みください。");
         } catch (e) { hideLoading(); alert("エラー"); }
@@ -358,10 +362,13 @@
         list.innerHTML = '';
         Object.keys(cart).forEach(key => {
             if (cart[key] > 0) {
-                const [itemName, price] = key.split('-');
+                const parts = key.split('-');
+                const price = parseInt(parts[parts.length - 1]);
+                const name = parts.slice(0, -1).join('-');
+                const subtotal = price * cart[key];
                 const div = document.createElement('div');
                 div.className = 'summary-item';
-                div.innerHTML = `<span>${itemName} × ${cart[key]}</span><span>\${(parseInt(price)*cart[key]).toLocaleString()}円</span>`;
+                div.innerHTML = `<span>${name} × ${cart[key]}</span><span>${subtotal.toLocaleString()}円</span>`;
                 list.appendChild(div);
             }
         });
@@ -377,7 +384,6 @@
     function enableEditModeUI() {
         document.getElementById('summary-view').style.display = 'none';
         document.getElementById('user-select').disabled = false;
-        // checkUserStatus側でmenu-containerやtabs-navの表示は再制御される
     }
 
     async function settleComplete() {
@@ -398,7 +404,6 @@
     
     function enableEdit() { 
         enableEditModeUI();
-        const user = userMasterData.find(u => u.name === document.getElementById('user-select').value);
         document.getElementById('menu-container').style.display = 'block';
         document.getElementById('tabs-nav').style.display = 'flex';
         document.getElementById('submit-btn').style.display = 'block'; 
