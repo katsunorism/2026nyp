@@ -34,6 +34,7 @@
         #summary-view { display: none; padding: 20px; background: #1f1f1f; border-radius: 15px; margin: 15px; border: 2px solid #27ae60; }
         .summary-title { font-weight: bold; color: #27ae60; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; text-align: center; font-size: 1.1rem; }
         .summary-item { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; border-bottom: 1px dashed #444; padding-bottom: 8px; }
+        .summary-total { margin-top: 15px; padding-top: 10px; border-top: 2px solid #444; display: flex; justify-content: space-between; font-weight: bold; color: #fff; }
         .thanks-msg { text-align: center; color: #f1c40f; font-size: 0.85rem; margin-top: 15px; font-weight: bold; }
 
         /* メニュー表示 */
@@ -81,7 +82,7 @@
         <p style="color:#bbb; line-height:1.6;">会費：11,500円を支払い後、<br>下の「精算する」ボタンを押してください。</p>
     </div>
     <div id="summary-view">
-        <div class="summary-title">注文を送信しました</div>
+        <div class="summary-title">送信済みの注文内容</div>
         <div id="summary-list"></div>
         <div class="thanks-msg">内容に間違いがなければ、<br>下の「精算する」ボタンを押して終了してください。</div>
     </div>
@@ -278,7 +279,6 @@
     function submitData() {
         if (globalTotal === 0) return alert("メニューを選択してください");
         
-        // 仕様：送信前に注文内容を一覧表示して確認
         let msg = "以下の内容で注文を送信しますか？\n\n";
         Object.keys(cart).forEach(key => {
             if (cart[key] > 0) {
@@ -287,7 +287,9 @@
                 msg += `・${parts.join('-')} × ${cart[key]} (${(price * cart[key]).toLocaleString()}円)\n`;
             }
         });
-        msg += `\n合計金額: ${globalTotal.toLocaleString()}円`;
+        // 仕様：メニューと合計の間に線を入れ、合計を太字にする（ダイアログ内はアスタリスクで太字表現）
+        msg += "--------------------------------------\n";
+        msg += `**合計金額: ${globalTotal.toLocaleString()}円**`;
         
         if (confirm(msg)) executeSubmit();
     }
@@ -318,6 +320,12 @@
                 list.appendChild(div);
             }
         });
+        // 画面上のサマリーにも合計と線を追加
+        const totalDiv = document.createElement('div');
+        totalDiv.className = 'summary-total';
+        totalDiv.innerHTML = '<span>合計金額</span><span>' + globalTotal.toLocaleString() + '円</span>';
+        list.appendChild(totalDiv);
+
         document.getElementById('menu-container').style.display = 'none';
         document.getElementById('tabs-nav').style.display = 'none';
         document.getElementById('summary-view').style.display = 'block';
