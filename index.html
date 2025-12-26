@@ -18,6 +18,7 @@
         .login-section { padding: 8px 15px; border-bottom: 1px solid #333; }
         .login-label { font-size: 0.7rem; font-weight: bold; margin-bottom: 4px; display: block; color: #e67e22; }
         select { width: 100%; padding: 8px; font-size: 0.95rem; border: 2px solid #27ae60; border-radius: 8px; background: #2c2c2c; color: white; outline: none; }
+        select option:disabled { color: #666; background: #1a1a1a; }
 
         /* カスタム確認モーダル */
         #custom-confirm { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 3000; display: none; align-items: center; justify-content: center; }
@@ -41,14 +42,14 @@
         .scrollable-content { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: 155px; padding-bottom: 180px; box-sizing: border-box; }
         .container { max-width: 600px; margin: 0 auto; padding: 10px; display: none; }
 
-        /* 送信後確認画面 */
+        /* 送信後画面 */
         #summary-view { display: none; padding: 20px; background: #1f1f1f; border-radius: 15px; margin: 15px; border: 2px solid #27ae60; }
         .summary-title { font-weight: bold; color: #27ae60; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; text-align: center; font-size: 1.1rem; }
         .summary-item { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; border-bottom: 1px dashed #444; padding-bottom: 8px; }
         .summary-total-line { margin-top: 15px; border-top: 2px solid #e67e22; padding-top: 12px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
         .thanks-msg { text-align: center; color: #f1c40f; font-size: 0.85rem; margin-top: 20px; font-weight: bold; border-top: 1px solid #333; padding-top: 15px; }
 
-        /* メニュー表示 */
+        /* メニューアイテム */
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .sub-category { font-size: 0.75rem; color: #27ae60; margin: 15px 0 8px 5px; font-weight: bold; border-left: 4px solid #e67e22; padding-left: 8px; text-transform: uppercase; }
@@ -135,7 +136,6 @@
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwrfJjY0RfBfErd7CrWswQlqqn9hEPtUo-izmxr37EOfb6H3E6RcFqHdcWedBwTC6_8Fw/exec";
     const PREPAID_DRINK_BUDGET = 2500;
 
-    // メニューデータ (略)
     const rawMenu = [
         { tabName: "カイピリーニャ", groups: [
             { label: "Caipirinha", items: [{name:"カイピリーニャ", price:1100}, {name:"プレミアム カイピリーニャ", price:1400}, {name:"泡盛カイピリーニャ", price:1100}]},
@@ -224,15 +224,29 @@
             userMasterData = await res.json();
             const select = document.getElementById('user-select');
             select.innerHTML = '<option value="">▼ 名前を選択してください</option>';
-            userMasterData.forEach(u => {
-                const opt = document.createElement('option');
-                opt.value = u.name;
-                opt.textContent = u.name + (u.isUnlimited ? " (飲み放題)" : "");
-                if (u.status === "精算完了") opt.disabled = true;
-                select.appendChild(opt);
-            });
+            
+            // 並び替えロジック復元: 未精算者を上、精算済みを下
+            const activeUsers = userMasterData.filter(u => u.status !== "精算完了");
+            const completedUsers = userMasterData.filter(u => u.status === "精算完了");
+
+            activeUsers.forEach(u => appendUserOption(select, u, false));
+            
+            if (completedUsers.length > 0) {
+                const group = document.createElement('optgroup');
+                group.label = "── 精算完了済み ──";
+                completedUsers.forEach(u => appendUserOption(group, u, true));
+                select.appendChild(group);
+            }
         } catch (e) { alert("名簿読み込み失敗"); }
         hideLoading();
+    }
+
+    function appendUserOption(parent, u, isDisabled) {
+        const opt = document.createElement('option');
+        opt.value = u.name;
+        opt.textContent = u.name + (u.isUnlimited ? " (飲み放題)" : "");
+        if (isDisabled) opt.disabled = true;
+        parent.appendChild(opt);
     }
 
     function checkUserStatus() {
@@ -352,25 +366,20 @@
         document.getElementById('post-submit-controls').style.display = 'none';
     }
 
-    // 精算完了時のサンクスメッセージ修正箇所
     async function settleComplete() {
         const name = document.getElementById('user-select').value;
         const user = userMasterData.find(u => u.name === name);
         const isUnlimited = user ? user.isUnlimited : false;
-        
         if (!confirm("精算を完了し、終了しますか？")) return;
         showLoading();
         try {
             await fetch(GAS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, action: "complete" }) });
             hideLoading();
-            
-            // 出し分けロジック
             if (isUnlimited) {
                 alert("精算完了しました！楽しい新年会になりますように！");
             } else {
                 alert("精算完了しました！次回のオフ会で再見！");
             }
-            
             location.reload();
         } catch (e) { hideLoading(); alert("通信エラー"); }
     }
