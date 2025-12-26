@@ -65,8 +65,20 @@
         
         /* フッター */
         .footer-result { position: fixed; bottom: 0; left: 0; width: 100%; background: #1f1f1f; border-top: 2px solid #333; padding: 12px 0 35px; z-index: 1000; }
+        .result-info-container { display:flex; justify-content:space-between; max-width:600px; margin:0 auto; padding:0 20px; align-items:center; }
+        
+        /* 差額情報の強調スタイル (センター寄せ) */
+        .final-result-centered { width: 100%; text-align: center; margin-bottom: 5px; }
+        .final-result-centered #status-label { font-size: 0.8rem; color: #e67e22; display: block; margin-bottom: 2px; }
+        .final-result-centered #final-result { font-size: 1.8rem; font-weight: bold; }
+
         .submit-btn { display: block; width: 92%; margin: 10px auto 0; background: #27ae60; color: white; border: none; padding: 14px; font-size: 1rem; font-weight: bold; border-radius: 10px; }
         
+        #post-submit-controls { display:none; gap:10px; padding:0 15px; max-width:560px; margin:10px auto 0; }
+        .post-btn { flex:1; padding:14px; border-radius:10px; border:none; font-weight:bold; font-size: 1rem; cursor: pointer; }
+        .edit-btn { background:#444; color:white; }
+        .settle-btn { background:#27ae60; color:white; }
+
         #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; }
         .spinner { border: 4px solid #333; border-top: 4px solid #27ae60; border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -115,20 +127,22 @@
 </div>
 
 <div class="footer-result" id="footer-area" style="display:none;">
-    <div id="price-display-area" style="display:flex; justify-content:space-between; max-width:600px; margin:0 auto; padding:0 20px; align-items:center;">
-        <div>
+    <div id="price-display-area" class="result-info-container">
+        <div id="qty-total-group">
             <div style="font-size:0.65rem; color:#888;">合計 (<span id="current-qty">0</span>点)</div>
             <div style="font-size:1.1rem; font-weight:bold; color:#fff;"><span id="current-total">0</span>円</div>
         </div>
-        <div style="text-align:right;">
+        <div id="diff-group" style="text-align:right;">
             <span id="status-label" style="font-size:0.65rem; color:#e67e22;">差額</span>
             <div id="final-result" style="font-size:1.3rem; font-weight:bold;">0円</div>
         </div>
     </div>
+
     <button id="submit-btn" class="submit-btn" onclick="openConfirm()">注文内容を送信する</button>
-    <div id="post-submit-controls" style="display:none; gap:10px; padding:0 15px; max-width:560px; margin:10px auto 0;">
-        <button id="edit-btn" onclick="enableEdit()" style="flex:1; padding:12px; border-radius:10px; background:#444; color:white; border:none; font-weight:bold;">修正</button>
-        <button id="settle-btn" onclick="settleComplete()" style="flex:1; padding:12px; border-radius:10px; background:#27ae60; color:white; border:none; font-weight:bold;">精算する</button>
+    
+    <div id="post-submit-controls">
+        <button id="edit-btn" class="post-btn edit-btn" onclick="enableEdit()">修正</button>
+        <button id="settle-btn" class="post-btn settle-btn" onclick="settleComplete()">精算する</button>
     </div>
 </div>
 
@@ -224,13 +238,9 @@
             userMasterData = await res.json();
             const select = document.getElementById('user-select');
             select.innerHTML = '<option value="">▼ 名前を選択してください</option>';
-            
-            // 並び替えロジック復元: 未精算者を上、精算済みを下
             const activeUsers = userMasterData.filter(u => u.status !== "精算完了");
             const completedUsers = userMasterData.filter(u => u.status === "精算完了");
-
             activeUsers.forEach(u => appendUserOption(select, u, false));
-            
             if (completedUsers.length > 0) {
                 const group = document.createElement('optgroup');
                 group.label = "── 精算完了済み ──";
@@ -260,12 +270,15 @@
         document.getElementById('footer-area').style.display = 'block';
         document.getElementById('summary-view').style.display = 'none';
         document.getElementById('user-select').disabled = false;
+        
+        // 飲み放題の場合は価格表示エリアごと隠す
         if (isUnlimited) {
             document.getElementById('price-display-area').style.display = 'none';
             document.getElementById('submit-btn').style.display = 'none';
             document.getElementById('post-submit-controls').style.display = 'flex';
             document.getElementById('edit-btn').style.display = 'none';
         } else {
+            resetFooterLayout(); // レイアウトを通常時に戻す
             document.getElementById('price-display-area').style.display = 'flex';
             document.getElementById('submit-btn').style.display = 'block';
             document.getElementById('post-submit-controls').style.display = 'none';
@@ -348,11 +361,19 @@
         totalLine.className = 'summary-total-line';
         totalLine.innerHTML = '<span>合計金額</span><span>' + globalTotal.toLocaleString() + '円</span>';
         list.appendChild(totalLine);
+
         document.getElementById('menu-container').style.display = 'none';
         document.getElementById('tabs-nav').style.display = 'none';
         document.getElementById('summary-view').style.display = 'block';
         document.getElementById('user-select').disabled = true;
         document.getElementById('submit-btn').style.display = 'none';
+        
+        // --- 送信後のフッターレイアウト調整 ---
+        const priceArea = document.getElementById('price-display-area');
+        priceArea.classList.add('final-result-centered'); // センター寄せクラス適用
+        document.getElementById('qty-total-group').style.display = 'none'; // 合計金額(左側)を隠す
+        document.getElementById('diff-group').style.textAlign = 'center'; // 差額を中央へ
+        
         document.getElementById('post-submit-controls').style.display = 'flex';
         document.getElementById('edit-btn').style.display = 'block';
     }
@@ -364,6 +385,15 @@
         document.getElementById('user-select').disabled = false;
         document.getElementById('submit-btn').style.display = 'block';
         document.getElementById('post-submit-controls').style.display = 'none';
+        
+        resetFooterLayout(); // レイアウトを通常時に戻す
+    }
+
+    function resetFooterLayout() {
+        const priceArea = document.getElementById('price-display-area');
+        priceArea.classList.remove('final-result-centered');
+        document.getElementById('qty-total-group').style.display = 'block';
+        document.getElementById('diff-group').style.textAlign = 'right';
     }
 
     async function settleComplete() {
