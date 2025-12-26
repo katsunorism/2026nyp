@@ -8,7 +8,7 @@
         /* 基本設定 */
         html, body { height: 100%; margin: 0; overflow: hidden; font-family: -apple-system, sans-serif; background-color: #121212; color: #eee; }
         
-        /* 固定ヘッダー（高さ調整） */
+        /* 固定ヘッダー */
         .fixed-header { position: fixed; top: 0; left: 0; width: 100%; background: #1f1f1f; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
         header { background-color: #27ae60; color: white; padding: 8px; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .header-logo { width: 30px; height: 30px; border-radius: 50%; border: 2px solid white; background: white; object-fit: cover; }
@@ -18,7 +18,7 @@
         .login-label { font-size: 0.7rem; font-weight: bold; margin-bottom: 4px; display: block; color: #e67e22; }
         select { width: 100%; padding: 8px; font-size: 0.95rem; border: 2px solid #27ae60; border-radius: 8px; background: #2c2c2c; color: white; outline: none; }
 
-        /* タブメニュー（隠れないよう調整） */
+        /* タブメニュー（視認性調整済み） */
         .tabs-container { display: none; overflow-x: auto; white-space: nowrap; background: #1f1f1f; border-bottom: 1px solid #333; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
         .tab { display: inline-block; padding: 12px 16px; font-size: 0.85rem; font-weight: bold; color: #fff; cursor: pointer; border-bottom: 3px solid transparent; line-height: 1.5; }
         .tab.active { color: #27ae60; border-bottom-color: #27ae60; }
@@ -32,7 +32,7 @@
         .summary-title { font-weight: bold; color: #27ae60; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; text-align: center; }
         .summary-item { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; border-bottom: 1px dashed #444; padding-bottom: 8px; }
 
-        /* メニュー表示 */
+        /* メニューアイテム */
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .sub-category { font-size: 0.75rem; color: #27ae60; margin: 15px 0 8px 5px; font-weight: bold; border-left: 4px solid #e67e22; padding-left: 8px; text-transform: uppercase; }
@@ -46,7 +46,7 @@
         .btn-minus { background: #444; color: #eee; }
         .count { width: 18px; text-align: center; font-weight: bold; font-size: 0.95rem; }
         
-        /* フッター固定 */
+        /* フッター */
         .footer-result { position: fixed; bottom: 0; left: 0; width: 100%; background: #1f1f1f; border-top: 2px solid #333; padding: 12px 0 35px; z-index: 1000; }
         .submit-btn { display: block; width: 92%; margin: 10px auto 0; background: #2c3e50; color: white; border: none; padding: 14px; font-size: 1rem; font-weight: bold; border-radius: 10px; }
         
@@ -87,7 +87,7 @@
     <div id="price-display-area" style="display:flex; justify-content:space-between; max-width:600px; margin:0 auto; padding:0 20px; align-items:center;">
         <div>
             <div style="font-size:0.65rem; color:#888;">合計 (<span id="current-qty">0</span>点)</div>
-            <div style="font-size:1.1rem; font-weight:bold; color:#fff;">\<span id="current-total">0</span></div>
+            <div style="font-size:1.1rem; font-weight:bold; color:#fff;"><span id="current-total">0</span>円</div>
         </div>
         <div style="text-align:right;">
             <span id="status-label" style="font-size:0.65rem; color:#e67e22;">差額</span>
@@ -141,7 +141,6 @@
         const nav = document.getElementById('tabs-nav');
         const container = document.getElementById('menu-container');
         
-        // 通常タブ生成
         rawMenu.forEach((d, i) => {
             addTab(nav, d.tabName, i);
             const contentDiv = document.createElement('div');
@@ -150,7 +149,6 @@
             container.appendChild(contentDiv);
         });
 
-        // 復活：メニュー一覧タブ（全件表示）
         const allIdx = rawMenu.length;
         addTab(nav, "メニュー一覧", allIdx);
         const allContentDiv = document.createElement('div');
@@ -243,7 +241,6 @@
     function upd(key, chg) {
         if (cart[key] + chg < 0) return;
         cart[key] += chg;
-        // 全てのタブ（通常と一覧）のカウント表示を同期
         document.querySelectorAll(`[id="cnt-${key}"]`).forEach(el => el.textContent = cart[key]);
         calc();
     }
@@ -330,7 +327,7 @@
         document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
         document.getElementById('tab-btn-' + idx).classList.add('active');
         document.getElementById('tab-content-' + idx).classList.add('active');
-        document.getElementById('scroll-area').scrollTop = 0; // 切り替え時に上に戻す
+        document.getElementById('scroll-area').scrollTop = 0;
     }
     function showLoading() { document.getElementById('loading-overlay').style.display = 'flex'; }
     function hideLoading() { document.getElementById('loading-overlay').style.display = 'none'; }
