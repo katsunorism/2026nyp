@@ -18,10 +18,14 @@
         .login-label { font-size: 0.7rem; font-weight: bold; margin-bottom: 4px; display: block; color: #e67e22; }
         select { width: 100%; padding: 8px; font-size: 0.95rem; border: 2px solid #27ae60; border-radius: 8px; background: #2c2c2c; color: white; outline: none; }
 
-        /* タブメニュー（視認性調整済み） */
+        /* タブメニュー */
         .tabs-container { display: none; overflow-x: auto; white-space: nowrap; background: #1f1f1f; border-bottom: 1px solid #333; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
         .tab { display: inline-block; padding: 12px 16px; font-size: 0.85rem; font-weight: bold; color: #fff; cursor: pointer; border-bottom: 3px solid transparent; line-height: 1.5; }
         .tab.active { color: #27ae60; border-bottom-color: #27ae60; }
+
+        /* 「メニュー一覧」専用の配色設定 */
+        .tab-all-items { color: #f1c40f !important; } /* 通常時のゴールド */
+        .tab-all-items.active { color: #f39c12 !important; border-bottom-color: #f39c12 !important; } /* 選択時の強調ゴールド */
 
         /* スクロールエリア */
         .scrollable-content { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: 155px; padding-bottom: 180px; box-sizing: border-box; }
@@ -105,7 +109,6 @@
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwrfJjY0RfBfErd7CrWswQlqqn9hEPtUo-izmxr37EOfb6H3E6RcFqHdcWedBwTC6_8Fw/exec";
     const PREPAID_DRINK_BUDGET = 2500;
 
-    // 全51品 復元データ
     const rawMenu = [
         { tabName: "カイピリーニャ", groups: [
             { label: "Caipirinha", items: [{name:"カイピリーニャ", price:1100}, {name:"プレミアム カイピリーニャ", price:1400}, {name:"泡盛カイピリーニャ", price:1100}]},
@@ -149,8 +152,9 @@
             container.appendChild(contentDiv);
         });
 
+        // 「メニュー一覧」タブに専用クラスを付与
         const allIdx = rawMenu.length;
-        addTab(nav, "メニュー一覧", allIdx);
+        addTab(nav, "メニュー一覧", allIdx, true);
         const allContentDiv = document.createElement('div');
         allContentDiv.className = 'tab-content'; allContentDiv.id = `tab-content-${allIdx}`;
         rawMenu.forEach(d => buildMenuHtml(allContentDiv, d.groups));
@@ -159,9 +163,11 @@
         switchTab(0);
     }
 
-    function addTab(nav, label, idx) {
+    function addTab(nav, label, idx, isSpecial = false) {
         const btn = document.createElement('div');
-        btn.className = 'tab'; btn.id = `tab-btn-${idx}`; btn.textContent = label;
+        btn.className = 'tab';
+        if(isSpecial) btn.classList.add('tab-all-items'); // 特別クラス付与
+        btn.id = `tab-btn-${idx}`; btn.textContent = label;
         btn.onclick = () => switchTab(idx);
         nav.appendChild(btn);
     }
