@@ -8,7 +8,7 @@
         /* 基本設定 */
         html, body { height: 100%; margin: 0; overflow: hidden; font-family: -apple-system, sans-serif; background-color: #121212; color: #eee; }
         
-        /* 固定ヘッダー - リンク用にポインタを追加 */
+        /* 固定ヘッダー */
         .fixed-header { position: fixed; top: 0; left: 0; width: 100%; background: #1f1f1f; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
         .header-link { text-decoration: none; color: inherit; display: block; }
         header { background-color: #27ae60; color: white; padding: 8px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
@@ -18,7 +18,6 @@
         .login-section { padding: 8px 15px; border-bottom: 1px solid #333; }
         .login-label { font-size: 0.7rem; font-weight: bold; margin-bottom: 4px; display: block; color: #e67e22; }
         select { width: 100%; padding: 8px; font-size: 0.95rem; border: 2px solid #27ae60; border-radius: 8px; background: #2c2c2c; color: white; outline: none; }
-        select option:disabled { color: #666; background: #1a1a1a; }
 
         /* タブメニュー */
         .tabs-container { display: none; overflow-x: auto; white-space: nowrap; background: #1f1f1f; border-bottom: 1px solid #333; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
@@ -35,12 +34,7 @@
         #summary-view { display: none; padding: 20px; background: #1f1f1f; border-radius: 15px; margin: 15px; border: 2px solid #27ae60; }
         .summary-title { font-weight: bold; color: #27ae60; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; text-align: center; font-size: 1.1rem; }
         .summary-item { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; border-bottom: 1px dashed #444; padding-bottom: 8px; }
-        
-        /* 線と太字の修正箇所 */
-        .summary-total-line { margin-top: 15px; border-top: 2px solid #e67e22; padding-top: 12px; display: flex; justify-content: space-between; align-items: center; }
-        .summary-total-label { font-weight: bold; font-size: 1rem; color: #fff; }
-        .summary-total-amount { font-weight: 900; font-size: 1.4rem; color: #f1c40f; }
-
+        .summary-total-line { margin-top: 15px; border-top: 2px solid #e67e22; padding-top: 12px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
         .thanks-msg { text-align: center; color: #f1c40f; font-size: 0.85rem; margin-top: 20px; font-weight: bold; border-top: 1px solid #333; padding-top: 15px; }
 
         /* メニュー表示 */
@@ -207,31 +201,21 @@
             userMasterData = await res.json();
             const select = document.getElementById('user-select');
             select.innerHTML = '<option value="">▼ 名前を選択してください</option>';
-            const activeUsers = userMasterData.filter(u => u.status !== "精算完了");
-            const completedUsers = userMasterData.filter(u => u.status === "精算完了");
-            activeUsers.forEach(u => appendUserOption(select, u, false));
-            if (completedUsers.length > 0) {
-                const group = document.createElement('optgroup');
-                group.label = "── 精算完了済み ──";
-                completedUsers.forEach(u => appendUserOption(group, u, true));
-                select.appendChild(group);
-            }
+            userMasterData.forEach(u => {
+                const opt = document.createElement('option');
+                opt.value = u.name;
+                opt.textContent = u.name + (u.isUnlimited ? " (飲み放題)" : "");
+                if (u.status === "精算完了") opt.disabled = true;
+                select.appendChild(opt);
+            });
         } catch (e) { alert("名簿読み込み失敗"); }
         hideLoading();
-    }
-
-    function appendUserOption(parent, u, isDisabled) {
-        const opt = document.createElement('option');
-        opt.value = u.name;
-        opt.textContent = u.name + (u.isUnlimited ? " (飲み放題)" : "");
-        if (isDisabled) opt.disabled = true;
-        parent.appendChild(opt);
     }
 
     function checkUserStatus() {
         const name = document.getElementById('user-select').value;
         const user = userMasterData.find(u => u.name === name);
-        if (!name) { hideAll(); return; }
+        if (!name) return;
         const isUnlimited = user.isUnlimited;
         document.getElementById('unlimited-panel').style.display = isUnlimited ? 'block' : 'none';
         document.getElementById('menu-container').style.display = isUnlimited ? 'none' : 'block';
@@ -250,12 +234,6 @@
             document.getElementById('post-submit-controls').style.display = 'none';
             calc();
         }
-    }
-
-    function hideAll() {
-        ['tabs-nav', 'menu-container', 'footer-area', 'unlimited-panel', 'summary-view'].forEach(id => {
-            const el = document.getElementById(id); if(el) el.style.display = 'none';
-        });
     }
 
     function upd(key, chg) {
@@ -287,7 +265,9 @@
     function submitData() {
         if (globalTotal === 0) return alert("メニューを選択してください");
         
-        let msg = "以下の内容で注文を送信しますか？\n\n";
+        // ダイアログ修正：太字コード削除、上下に線を追加
+        let msg = "以下の内容で注文を送信しますか？\n";
+        msg += "--------------------------------------\n";
         Object.keys(cart).forEach(key => {
             if (cart[key] > 0) {
                 const parts = key.split('-');
@@ -328,10 +308,9 @@
             }
         });
         
-        // 画面上のリストの最後に太い線と太字の合計金額を追加
         const totalLine = document.createElement('div');
         totalLine.className = 'summary-total-line';
-        totalLine.innerHTML = '<span class="summary-total-label">合計金額</span><span class="summary-total-amount">' + globalTotal.toLocaleString() + '円</span>';
+        totalLine.innerHTML = '<span>合計金額</span><span>' + globalTotal.toLocaleString() + '円</span>';
         list.appendChild(totalLine);
 
         document.getElementById('menu-container').style.display = 'none';
@@ -354,18 +333,12 @@
 
     async function settleComplete() {
         const name = document.getElementById('user-select').value;
-        const user = userMasterData.find(u => u.name === name);
-        const isUnlimited = user ? user.isUnlimited : false;
         if (!confirm("精算を完了し、終了しますか？")) return;
         showLoading();
         try {
             await fetch(GAS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, action: "complete" }) });
             hideLoading();
-            if (isUnlimited) {
-                alert("精算完了しました！楽しい新年会になりますように！");
-            } else {
-                alert("精算完了しました！次回のオフ会で再見！");
-            }
+            alert("精算完了しました！");
             location.reload();
         } catch (e) { hideLoading(); alert("通信エラー"); }
     }
