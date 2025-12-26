@@ -5,42 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>2026カテコミュ新年会 in 大阪</title>
     <style>
-        html, body { height: 100%; margin: 0; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #1a1a1a; color: #eee; }
-        .fixed-header { position: fixed; top: 0; left: 0; width: 100%; background: #222; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        /* 基本スタイル：ダークテーマ */
+        html, body { height: 100%; margin: 0; overflow: hidden; font-family: sans-serif; background-color: #121212; color: #eee; }
+        
+        /* ヘッダー固定 */
+        .fixed-header { position: fixed; top: 0; left: 0; width: 100%; background: #1f1f1f; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
         header { background-color: #27ae60; color: white; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 12px; }
         .header-logo { width: 34px; height: 34px; border-radius: 50%; border: 2px solid white; background: white; object-fit: cover; }
-        header h1 { margin: 0; font-size: 1.1rem; letter-spacing: 0.5px; }
-        .login-section { padding: 12px 15px; border-bottom: 1px solid #333; }
+        header h1 { margin: 0; font-size: 1.1rem; }
+
+        .login-section { padding: 10px 15px; border-bottom: 1px solid #333; }
         .login-label { font-size: 0.75rem; font-weight: bold; margin-bottom: 5px; display: block; color: #e67e22; }
-        select { width: 100%; padding: 10px; font-size: 1rem; border: 2px solid #27ae60; border-radius: 8px; background: #333; color: white; appearance: none; }
-        select:disabled { background: #222; border-color: #444; color: #777; }
-        
-        .tabs-container { overflow-x: auto; white-space: nowrap; border-bottom: 1px solid #333; background: #222; display: none; }
-        .tab { padding: 12px 20px; font-size: 0.85rem; font-weight: bold; color: #777; cursor: pointer; border-bottom: 3px solid transparent; flex-shrink: 0; }
+        select { width: 100%; padding: 10px; font-size: 1rem; border: 2px solid #27ae60; border-radius: 8px; background: #2c2c2c; color: white; }
+
+        /* タブ：ここを修正（視認性向上） */
+        .tabs-container { display: none; overflow-x: auto; white-space: nowrap; background: #1f1f1f; border-bottom: 1px solid #333; padding: 0 10px; }
+        .tab { display: inline-block; padding: 15px 20px; font-size: 0.9rem; font-weight: bold; color: #bbb; cursor: pointer; border-bottom: 3px solid transparent; }
         .tab.active { color: #27ae60; border-bottom-color: #27ae60; }
-        
-        .scrollable-content { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: 150px; padding-bottom: 180px; box-sizing: border-box; }
+
+        /* スクロールエリア */
+        .scrollable-content { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: 160px; padding-bottom: 180px; box-sizing: border-box; }
         .container { max-width: 600px; margin: 0 auto; padding: 10px; display: none; }
-        
-        #summary-view { display: none; padding: 20px; background: #222; border-radius: 15px; margin: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 2px solid #27ae60; }
+
+        /* 送信済み注文内容 */
+        #summary-view { display: none; padding: 20px; background: #1f1f1f; border-radius: 15px; margin: 20px; border: 2px solid #27ae60; }
         .summary-title { font-weight: bold; color: #27ae60; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; text-align: center; }
         .summary-item { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.95rem; border-bottom: 1px dashed #444; padding-bottom: 8px; }
 
+        /* メニューアイテム */
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .sub-category { font-size: 0.85rem; color: #27ae60; margin: 20px 0 10px 5px; font-weight: bold; border-left: 4px solid #e67e22; padding-left: 8px; }
         .menu-item { background: #2c2c2c; border-radius: 12px; padding: 12px 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .item-info { display: flex; flex-direction: column; max-width: 65%; }
-        .item-name { font-weight: bold; font-size: 0.9rem; line-height: 1.3; color: #fff; }
-        .item-price { font-size: 0.85rem; color: #999; margin-top: 4px; }
-        .controls { display: flex; align-items: center; gap: 12px; }
-        .btn { width: 32px; height: 32px; border-radius: 50%; border: none; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .btn-plus { background: #27ae60; color: white; }
-        .btn-minus { background: #444; color: #999; }
-        .count { font-weight: bold; width: 20px; text-align: center; color: #fff; }
+        .item-name { font-weight: bold; font-size: 0.9rem; color: #fff; }
+        .item-price { font-size: 0.8rem; color: #999; }
         
-        .footer-result { position: fixed; bottom: 0; left: 0; width: 100%; background: #222; border-top: 2px solid #333; padding: 15px 0 30px; z-index: 1000; }
-        .submit-btn { display: block; width: 90%; margin: 12px auto 0; background: #2c3e50; color: white; border: none; padding: 14px; font-size: 1rem; font-weight: bold; border-radius: 10px; }
+        .controls { display: flex; align-items: center; gap: 12px; }
+        .btn { width: 32px; height: 32px; border-radius: 50%; border: none; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .btn-plus { background: #27ae60; color: white; }
+        .btn-minus { background: #444; color: #aaa; }
+        
+        /* フッター */
+        .footer-result { position: fixed; bottom: 0; left: 0; width: 100%; background: #1f1f1f; border-top: 2px solid #333; padding: 15px 0 30px; z-index: 1000; }
+        .submit-btn { display: block; width: 90%; margin: 12px auto 0; background: #2c3e50; color: white; border: none; padding: 15px; font-size: 1rem; font-weight: bold; border-radius: 10px; }
+        
         #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; }
         .spinner { border: 4px solid #333; border-top: 4px solid #27ae60; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -65,14 +73,12 @@
 <div class="scrollable-content" id="scroll-area">
     <div id="unlimited-panel" style="display:none; text-align:center; padding:40px 20px;">
         <h2 style="color:#27ae60;">飲み放題プラン</h2>
-        <p style="color:#bbb;">会費：11,500円を支払い後、<br>下の「精算完了」ボタンを押してください。</p>
+        <p style="color:#bbb;">会費：11,500円を支払い後、<br>下の「精算する」ボタンを押してください。</p>
     </div>
-
     <div id="summary-view">
         <div class="summary-title">送信済みの注文内容</div>
         <div id="summary-list"></div>
     </div>
-
     <div class="container" id="menu-container"></div>
 </div>
 
@@ -95,7 +101,8 @@
 </div>
 
 <script>
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzlzOGEQOZ_srQvuv3yQcYADuMCcDhGLXFekwP8nFc26GmUPvZHqGebcPriD86SjC91hQ/exec";
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwrfJjY0RfBfErd7CrWswQlqqn9hEPtUo-izmxr37EOfb6H3E6RcFqHdcWedBwTC6_8Fw/exec";
+    const PREPAID_DRINK_BUDGET = 2500;
 
     const rawMenu = [
         { tabName: "カイピリーニャ", groups: [
@@ -104,27 +111,25 @@
         ]},
         { tabName: "ビール/サワー", groups: [
             { label: "Brazilian Beer", items: [{name:"バルテンツァ", price:1600}, {name:"リコルディ", price:1600}]},
-            { label: "Beer", items: [{name:"生ビール", price:980}, {name:"コロナ", price:990}, {name:"ギネス", price:990}, {name:"ノンアルビール", price:700}]},
-            { label: "High Ball & Sour", items: [{name:"ハイボール", price:1200}, {name:"レモンサワー", price:850}, {name:"マテ茶ハイ", price:850}]}
+            { label: "Beer", items: [{name:"生ビール", price:980}, {name:"コロナ", price:990}, {name:"ギネス", price:990}]},
+            { label: "High Ball & Sour", items: [{name:"ハイボール", price:1200}, {name:"レモンサワー", price:850}]}
         ]}
     ];
 
-    const menuData = [...rawMenu];
-    const PREPAID_DRINK_BUDGET = 2500;
     const cart = {};
     let globalTotal = 0;
     let globalQty = 0;
     let userMasterData = [];
 
     window.onload = async () => {
-        initApp();
+        initMenu();
         await fetchNames();
     };
 
-    function initApp() {
+    function initMenu() {
         const nav = document.getElementById('tabs-nav');
         const container = document.getElementById('menu-container');
-        menuData.forEach((d, i) => {
+        rawMenu.forEach((d, i) => {
             const btn = document.createElement('div');
             btn.className = 'tab'; btn.id = `tab-btn-${i}`; btn.textContent = d.tabName;
             btn.onclick = () => switchTab(i);
@@ -142,10 +147,10 @@
                     const div = document.createElement('div');
                     div.className = 'menu-item';
                     div.innerHTML = `
-                        <div class="item-info"><span class="item-name">${item.name}</span><span class="item-price">${item.price.toLocaleString()}円</span></div>
+                        <div><div class="item-name">${item.name}</div><div class="item-price">${item.price.toLocaleString()}円</div></div>
                         <div class="controls">
                             <button class="btn btn-minus" onclick="upd('${key}', -1)">-</button>
-                            <span class="count" id="cnt-${key}">0</span>
+                            <span style="width:20px; text-align:center;" id="cnt-${key}">0</span>
                             <button class="btn btn-plus" onclick="upd('${key}', 1)">+</button>
                         </div>`;
                     contentDiv.appendChild(div);
@@ -159,14 +164,14 @@
     async function fetchNames() {
         showLoading();
         try {
-            const response = await fetch(GAS_API_URL + "?action=getData");
-            userMasterData = await response.json();
+            const res = await fetch(GAS_API_URL + "?action=getData");
+            userMasterData = await res.json();
             const select = document.getElementById('user-select');
             select.innerHTML = '<option value="">▼ 名前を選択してください</option>';
             userMasterData.forEach(u => {
                 const opt = document.createElement('option');
                 opt.value = u.name;
-                opt.textContent = `${u.name}${u.isUnlimited ? ' (飲み放題)' : ''}`;
+                opt.textContent = u.name + (u.isUnlimited ? " (飲み放題)" : "");
                 if (u.status === "精算完了") opt.disabled = true;
                 select.appendChild(opt);
             });
@@ -177,14 +182,15 @@
     function checkUserStatus() {
         const name = document.getElementById('user-select').value;
         const user = userMasterData.find(u => u.name === name);
-        enableEditModeUI();
         if (!name) { hideAll(); return; }
 
-        const isUnlimited = user.isUnlimited; // GAS側の「飲み放題」列に値があればtrue
+        const isUnlimited = user.isUnlimited;
         document.getElementById('unlimited-panel').style.display = isUnlimited ? 'block' : 'none';
         document.getElementById('menu-container').style.display = isUnlimited ? 'none' : 'block';
-        document.getElementById('tabs-nav').style.display = isUnlimited ? 'none' : 'flex';
+        document.getElementById('tabs-nav').style.display = isUnlimited ? 'none' : 'block';
         document.getElementById('footer-area').style.display = 'block';
+        document.getElementById('summary-view').style.display = 'none';
+        document.getElementById('user-select').disabled = false;
 
         if (isUnlimited) {
             document.getElementById('price-display-area').style.display = 'none';
@@ -200,11 +206,9 @@
     }
 
     function hideAll() {
-        document.getElementById('tabs-nav').style.display = 'none';
-        document.getElementById('menu-container').style.display = 'none';
-        document.getElementById('footer-area').style.display = 'none';
-        document.getElementById('unlimited-panel').style.display = 'none';
-        document.getElementById('summary-view').style.display = 'none';
+        ['tabs-nav', 'menu-container', 'footer-area', 'unlimited-panel', 'summary-view'].forEach(id => {
+            document.getElementById(id).style.display = 'none';
+        });
     }
 
     function upd(key, chg) {
@@ -233,11 +237,6 @@
         }
     }
 
-    function submitData() {
-        if (globalTotal === 0) return alert("メニューを選択してください");
-        if (confirm("注文内容を送信します。よろしいですか？")) executeSubmit();
-    }
-
     async function executeSubmit() {
         const name = document.getElementById('user-select').value;
         const details = Object.keys(cart).filter(k => cart[k] > 0).map(k => `${k.split('-')[0]}x${cart[k]}`).join(", ");
@@ -245,7 +244,7 @@
         try {
             await fetch(GAS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, details, total: globalTotal, action: "submit" }) });
             setSummaryView();
-            document.getElementById('scroll-area').scrollTop = 0; // スクロールを一番上へ
+            document.getElementById('scroll-area').scrollTop = 0; // スクロールを一番上にセット
             hideLoading();
         } catch (e) { hideLoading(); alert("送信エラー"); }
     }
@@ -255,11 +254,13 @@
         list.innerHTML = '';
         Object.keys(cart).forEach(key => {
             if (cart[key] > 0) {
-                const [itemName, price] = key.split('-');
-                const subtotal = parseInt(price) * cart[key];
+                const parts = key.split('-');
+                const name = parts[0];
+                const price = parseInt(parts[1]);
+                const subtotal = price * cart[key];
                 const div = document.createElement('div');
                 div.className = 'summary-item';
-                div.innerHTML = `<span>${itemName} × ${cart[key]}</span><span>${subtotal.toLocaleString()}円</span>`;
+                div.innerHTML = `<span>${name} × ${cart[key]}</span><span>${subtotal.toLocaleString()}円</span>`;
                 list.appendChild(div);
             }
         });
@@ -272,17 +273,18 @@
         document.getElementById('edit-btn').style.display = 'block';
     }
 
-    function enableEdit() {
-        enableEditModeUI();
-        document.getElementById('menu-container').style.display = 'block';
-        document.getElementById('tabs-nav').style.display = 'flex';
-        document.getElementById('submit-btn').style.display = 'block';
-        document.getElementById('post-submit-controls').style.display = 'none';
+    function submitData() {
+        if (globalTotal === 0) return alert("メニューを選択してください");
+        if (confirm("注文内容を送信します。よろしいですか？")) executeSubmit();
     }
 
-    function enableEditModeUI() {
+    function enableEdit() {
         document.getElementById('summary-view').style.display = 'none';
+        document.getElementById('menu-container').style.display = 'block';
+        document.getElementById('tabs-nav').style.display = 'block';
         document.getElementById('user-select').disabled = false;
+        document.getElementById('submit-btn').style.display = 'block';
+        document.getElementById('post-submit-controls').style.display = 'none';
     }
 
     async function settleComplete() {
@@ -306,5 +308,3 @@
 </script>
 </body>
 </html>
-
-
