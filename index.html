@@ -42,7 +42,7 @@
         .scrollable-content { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: 155px; padding-bottom: 180px; box-sizing: border-box; }
         .container { max-width: 600px; margin: 0 auto; padding: 10px; display: none; }
 
-        /* 送信後画面 */
+        /* 送信後画面（サマリー表示） */
         #summary-view { display: none; padding: 20px; background: #1f1f1f; border-radius: 15px; margin: 15px; border: 2px solid #27ae60; }
         .summary-title { font-weight: bold; color: #27ae60; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; text-align: center; font-size: 1.1rem; }
         .summary-item { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; border-bottom: 1px dashed #444; padding-bottom: 8px; }
@@ -63,18 +63,20 @@
         .btn-minus { background: #444; color: #eee; }
         .count { width: 18px; text-align: center; font-weight: bold; font-size: 0.95rem; }
         
-        /* フッター */
+        /* フッターエリア */
         .footer-result { position: fixed; bottom: 0; left: 0; width: 100%; background: #1f1f1f; border-top: 2px solid #333; padding: 12px 0 35px; z-index: 1000; }
         .result-info-container { display:flex; justify-content:space-between; max-width:600px; margin:0 auto; padding:0 20px; align-items:center; }
         
-        /* 差額情報の強調スタイル (センター寄せ) */
-        .final-result-centered { width: 100%; text-align: center; margin-bottom: 5px; }
-        .final-result-centered #status-label { font-size: 0.8rem; color: #e67e22; display: block; margin-bottom: 2px; }
-        .final-result-centered #final-result { font-size: 1.8rem; font-weight: bold; }
+        /* 差額表示用スタイル */
+        .diff-display { text-align: center; margin-bottom: 12px; width: 100%; }
+        .diff-label { font-size: 0.8rem; color: #e67e22; margin-bottom: 4px; display: block; }
+        .diff-amount { font-size: 1.8rem; font-weight: bold; }
 
         .submit-btn { display: block; width: 92%; margin: 10px auto 0; background: #27ae60; color: white; border: none; padding: 14px; font-size: 1rem; font-weight: bold; border-radius: 10px; }
         
-        #post-submit-controls { display:none; gap:10px; padding:0 15px; max-width:560px; margin:10px auto 0; }
+        /* 送信後のボタンコントロール（垂直中央揃え） */
+        #post-submit-controls { display:none; flex-direction: column; align-items: center; width: 100%; }
+        .post-buttons-row { display: flex; gap: 10px; width: 92%; max-width: 560px; justify-content: center; }
         .post-btn { flex:1; padding:14px; border-radius:10px; border:none; font-weight:bold; font-size: 1rem; cursor: pointer; }
         .edit-btn { background:#444; color:white; }
         .settle-btn { background:#27ae60; color:white; }
@@ -141,8 +143,14 @@
     <button id="submit-btn" class="submit-btn" onclick="openConfirm()">注文内容を送信する</button>
     
     <div id="post-submit-controls">
-        <button id="edit-btn" class="post-btn edit-btn" onclick="enableEdit()">修正</button>
-        <button id="settle-btn" class="post-btn settle-btn" onclick="settleComplete()">精算する</button>
+        <div class="diff-display">
+            <span id="post-status-label" class="diff-label">追加支払い</span>
+            <div id="post-final-result" class="diff-amount">0円</div>
+        </div>
+        <div class="post-buttons-row">
+            <button id="edit-btn" class="post-btn edit-btn" onclick="enableEdit()">修正</button>
+            <button id="settle-btn" class="post-btn settle-btn" onclick="settleComplete()">精算する</button>
+        </div>
     </div>
 </div>
 
@@ -271,17 +279,15 @@
         document.getElementById('summary-view').style.display = 'none';
         document.getElementById('user-select').disabled = false;
         
-        // 飲み放題の場合は価格表示エリアごと隠す
         if (isUnlimited) {
             document.getElementById('price-display-area').style.display = 'none';
             document.getElementById('submit-btn').style.display = 'none';
             document.getElementById('post-submit-controls').style.display = 'flex';
             document.getElementById('edit-btn').style.display = 'none';
+            document.getElementById('post-status-label').style.display = 'none';
+            document.getElementById('post-final-result').style.display = 'none';
         } else {
-            resetFooterLayout(); // レイアウトを通常時に戻す
-            document.getElementById('price-display-area').style.display = 'flex';
-            document.getElementById('submit-btn').style.display = 'block';
-            document.getElementById('post-submit-controls').style.display = 'none';
+            resetFooter();
             calc();
         }
     }
@@ -301,14 +307,26 @@
             globalQty += cart[key];
         });
         const bal = globalTotal - PREPAID_DRINK_BUDGET;
+        
+        // 通常時フッター
         document.getElementById('current-total').textContent = globalTotal.toLocaleString();
         document.getElementById('current-qty').textContent = globalQty;
+        
         const res = document.getElementById('final-result');
         const lbl = document.getElementById('status-label');
+        
+        // 送信後（中央表示）フッター
+        const postRes = document.getElementById('post-final-result');
+        const postLbl = document.getElementById('post-status-label');
+
         if (bal > 0) {
-            lbl.textContent = "追加支払い"; res.textContent = "+" + bal.toLocaleString() + "円"; res.style.color = "#ff4d4d";
+            const txt = "+" + bal.toLocaleString() + "円";
+            lbl.textContent = "追加支払い"; res.textContent = txt; res.style.color = "#ff4d4d";
+            postLbl.textContent = "追加支払い"; postRes.textContent = txt; postRes.style.color = "#ff4d4d";
         } else {
-            lbl.textContent = "返金受取"; res.textContent = Math.abs(bal).toLocaleString() + "円"; res.style.color = "#4dabff";
+            const txt = Math.abs(bal).toLocaleString() + "円";
+            lbl.textContent = "返金受取"; res.textContent = txt; res.style.color = "#4dabff";
+            postLbl.textContent = "返金受取"; postRes.textContent = txt; postRes.style.color = "#4dabff";
         }
     }
 
@@ -350,10 +368,9 @@
             if (cart[key] > 0) {
                 const parts = key.split('-');
                 const price = parseInt(parts.pop());
-                const sub = price * cart[key];
                 const div = document.createElement('div');
                 div.className = 'summary-item';
-                div.innerHTML = '<span>' + parts.join('-') + ' × ' + cart[key] + '</span><span>' + sub.toLocaleString() + '円</span>';
+                div.innerHTML = '<span>' + parts.join('-') + ' × ' + cart[key] + '</span><span>' + (price * cart[key]).toLocaleString() + '円</span>';
                 list.appendChild(div);
             }
         });
@@ -366,15 +383,14 @@
         document.getElementById('tabs-nav').style.display = 'none';
         document.getElementById('summary-view').style.display = 'block';
         document.getElementById('user-select').disabled = true;
+        
+        // フッター切り替え：通常エリアを消して送信後エリアを表示
+        document.getElementById('price-display-area').style.display = 'none';
         document.getElementById('submit-btn').style.display = 'none';
         
-        // --- 送信後のフッターレイアウト調整 ---
-        const priceArea = document.getElementById('price-display-area');
-        priceArea.classList.add('final-result-centered'); // センター寄せクラス適用
-        document.getElementById('qty-total-group').style.display = 'none'; // 合計金額(左側)を隠す
-        document.getElementById('diff-group').style.textAlign = 'center'; // 差額を中央へ
-        
         document.getElementById('post-submit-controls').style.display = 'flex';
+        document.getElementById('post-status-label').style.display = 'block';
+        document.getElementById('post-final-result').style.display = 'block';
         document.getElementById('edit-btn').style.display = 'block';
     }
 
@@ -383,33 +399,23 @@
         document.getElementById('menu-container').style.display = 'block';
         document.getElementById('tabs-nav').style.display = 'block';
         document.getElementById('user-select').disabled = false;
-        document.getElementById('submit-btn').style.display = 'block';
-        document.getElementById('post-submit-controls').style.display = 'none';
-        
-        resetFooterLayout(); // レイアウトを通常時に戻す
+        resetFooter();
     }
 
-    function resetFooterLayout() {
-        const priceArea = document.getElementById('price-display-area');
-        priceArea.classList.remove('final-result-centered');
-        document.getElementById('qty-total-group').style.display = 'block';
-        document.getElementById('diff-group').style.textAlign = 'right';
+    function resetFooter() {
+        document.getElementById('price-display-area').style.display = 'flex';
+        document.getElementById('submit-btn').style.display = 'block';
+        document.getElementById('post-submit-controls').style.display = 'none';
     }
 
     async function settleComplete() {
         const name = document.getElementById('user-select').value;
-        const user = userMasterData.find(u => u.name === name);
-        const isUnlimited = user ? user.isUnlimited : false;
         if (!confirm("精算を完了し、終了しますか？")) return;
         showLoading();
         try {
             await fetch(GAS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, action: "complete" }) });
             hideLoading();
-            if (isUnlimited) {
-                alert("精算完了しました！楽しい新年会になりますように！");
-            } else {
-                alert("精算完了しました！次回のオフ会で再見！");
-            }
+            alert("精算完了しました！ありがとうございました。");
             location.reload();
         } catch (e) { hideLoading(); alert("通信エラー"); }
     }
