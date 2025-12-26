@@ -198,11 +198,8 @@
             userMasterData = await res.json();
             const select = document.getElementById('user-select');
             select.innerHTML = '<option value="">▼ 名前を選択してください</option>';
-
-            // 仕様：未完了を上、完了済みを下にグルーピング
             const activeUsers = userMasterData.filter(u => u.status !== "精算完了");
             const completedUsers = userMasterData.filter(u => u.status === "精算完了");
-
             activeUsers.forEach(u => appendUserOption(select, u, false));
             if (completedUsers.length > 0) {
                 const group = document.createElement('optgroup');
@@ -280,7 +277,19 @@
 
     function submitData() {
         if (globalTotal === 0) return alert("メニューを選択してください");
-        if (confirm("注文内容を送信します。よろしいですか？")) executeSubmit();
+        
+        // 仕様：送信前に注文内容を一覧表示して確認
+        let msg = "以下の内容で注文を送信しますか？\n\n";
+        Object.keys(cart).forEach(key => {
+            if (cart[key] > 0) {
+                const parts = key.split('-');
+                const price = parseInt(parts.pop());
+                msg += `・${parts.join('-')} × ${cart[key]} (${(price * cart[key]).toLocaleString()}円)\n`;
+            }
+        });
+        msg += `\n合計金額: ${globalTotal.toLocaleString()}円`;
+        
+        if (confirm(msg)) executeSubmit();
     }
 
     async function executeSubmit() {
