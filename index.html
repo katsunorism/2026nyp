@@ -8,9 +8,10 @@
         /* 基本設定 */
         html, body { height: 100%; margin: 0; overflow: hidden; font-family: -apple-system, sans-serif; background-color: #121212; color: #eee; }
         
-        /* 固定ヘッダー */
+        /* 固定ヘッダー - リンク用にポインタを追加 */
         .fixed-header { position: fixed; top: 0; left: 0; width: 100%; background: #1f1f1f; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-        header { background-color: #27ae60; color: white; padding: 8px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .header-link { text-decoration: none; color: inherit; display: block; }
+        header { background-color: #27ae60; color: white; padding: 8px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
         .header-logo { width: 30px; height: 30px; border-radius: 50%; border: 2px solid white; background: white; object-fit: cover; }
         header h1 { margin: 0; font-size: 1rem; }
 
@@ -34,8 +35,13 @@
         #summary-view { display: none; padding: 20px; background: #1f1f1f; border-radius: 15px; margin: 15px; border: 2px solid #27ae60; }
         .summary-title { font-weight: bold; color: #27ae60; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; text-align: center; font-size: 1.1rem; }
         .summary-item { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; border-bottom: 1px dashed #444; padding-bottom: 8px; }
-        .summary-total { margin-top: 15px; padding-top: 10px; border-top: 2px solid #444; display: flex; justify-content: space-between; font-weight: bold; color: #fff; }
-        .thanks-msg { text-align: center; color: #f1c40f; font-size: 0.85rem; margin-top: 15px; font-weight: bold; }
+        
+        /* 線と太字の修正箇所 */
+        .summary-total-line { margin-top: 15px; border-top: 2px solid #e67e22; padding-top: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .summary-total-label { font-weight: bold; font-size: 1rem; color: #fff; }
+        .summary-total-amount { font-weight: 900; font-size: 1.4rem; color: #f1c40f; }
+
+        .thanks-msg { text-align: center; color: #f1c40f; font-size: 0.85rem; margin-top: 20px; font-weight: bold; border-top: 1px solid #333; padding-top: 15px; }
 
         /* メニュー表示 */
         .tab-content { display: none; }
@@ -65,10 +71,12 @@
 <div id="loading-overlay"><div class="spinner"></div><div style="font-size:0.8rem; margin-top:10px;">通信中...</div></div>
 
 <div class="fixed-header">
-    <header>
-        <img src="https://raw.githubusercontent.com/katsunorism/2026nyp/main/logo.jpg" class="header-logo">
-        <h1>2026新年会 in 大阪</h1>
-    </header>
+    <a href="https://katsunorism.github.io/2026nyp/" class="header-link">
+        <header>
+            <img src="https://raw.githubusercontent.com/katsunorism/2026nyp/main/logo.jpg" class="header-logo">
+            <h1>2026新年会 in 大阪</h1>
+        </header>
+    </a>
     <div class="login-section">
         <label class="login-label">ご自身のお名前を選択してください</label>
         <select id="user-select" onchange="checkUserStatus()"><option value="">名簿読み込み中...</option></select>
@@ -82,7 +90,7 @@
         <p style="color:#bbb; line-height:1.6;">会費：11,500円を支払い後、<br>下の「精算する」ボタンを押してください。</p>
     </div>
     <div id="summary-view">
-        <div class="summary-title">送信済みの注文内容</div>
+        <div class="summary-title">送信された注文内容</div>
         <div id="summary-list"></div>
         <div class="thanks-msg">内容に間違いがなければ、<br>下の「精算する」ボタンを押して終了してください。</div>
     </div>
@@ -287,9 +295,8 @@
                 msg += `・${parts.join('-')} × ${cart[key]} (${(price * cart[key]).toLocaleString()}円)\n`;
             }
         });
-        // 仕様：メニューと合計の間に線を入れ、合計を太字にする（ダイアログ内はアスタリスクで太字表現）
         msg += "--------------------------------------\n";
-        msg += `**合計金額: ${globalTotal.toLocaleString()}円**`;
+        msg += "合計金額: " + globalTotal.toLocaleString() + "円";
         
         if (confirm(msg)) executeSubmit();
     }
@@ -320,11 +327,12 @@
                 list.appendChild(div);
             }
         });
-        // 画面上のサマリーにも合計と線を追加
-        const totalDiv = document.createElement('div');
-        totalDiv.className = 'summary-total';
-        totalDiv.innerHTML = '<span>合計金額</span><span>' + globalTotal.toLocaleString() + '円</span>';
-        list.appendChild(totalDiv);
+        
+        // 画面上のリストの最後に太い線と太字の合計金額を追加
+        const totalLine = document.createElement('div');
+        totalLine.className = 'summary-total-line';
+        totalLine.innerHTML = '<span class="summary-total-label">合計金額</span><span class="summary-total-amount">' + globalTotal.toLocaleString() + '円</span>';
+        list.appendChild(totalLine);
 
         document.getElementById('menu-container').style.display = 'none';
         document.getElementById('tabs-nav').style.display = 'none';
