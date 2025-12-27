@@ -67,7 +67,7 @@
         .footer-result { position: fixed; bottom: 0; left: 0; width: 100%; background: #1f1f1f; border-top: 2px solid #333; padding: 12px 0 35px; z-index: 1000; }
         .result-info-container { display:flex; justify-content:space-between; max-width:600px; margin:0 auto; padding:0 20px; align-items:center; }
         
-        /* 差額表示用スタイル */
+        /* 差額表示用スタイル (センター) */
         .diff-display { text-align: center; margin-bottom: 12px; width: 100%; }
         .diff-label { font-size: 0.8rem; color: #e67e22; margin-bottom: 4px; display: block; }
         .diff-amount { font-size: 1.8rem; font-weight: bold; }
@@ -308,14 +308,11 @@
         });
         const bal = globalTotal - PREPAID_DRINK_BUDGET;
         
-        // 通常時フッター
         document.getElementById('current-total').textContent = globalTotal.toLocaleString();
         document.getElementById('current-qty').textContent = globalQty;
         
         const res = document.getElementById('final-result');
         const lbl = document.getElementById('status-label');
-        
-        // 送信後（中央表示）フッター
         const postRes = document.getElementById('post-final-result');
         const postLbl = document.getElementById('post-status-label');
 
@@ -384,7 +381,6 @@
         document.getElementById('summary-view').style.display = 'block';
         document.getElementById('user-select').disabled = true;
         
-        // フッター切り替え：通常エリアを消して送信後エリアを表示
         document.getElementById('price-display-area').style.display = 'none';
         document.getElementById('submit-btn').style.display = 'none';
         
@@ -410,12 +406,18 @@
 
     async function settleComplete() {
         const name = document.getElementById('user-select').value;
+        const user = userMasterData.find(u => u.name === name);
+        const isUnlimited = user ? user.isUnlimited : false;
         if (!confirm("精算を完了し、終了しますか？")) return;
         showLoading();
         try {
             await fetch(GAS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, action: "complete" }) });
             hideLoading();
-            alert("精算完了しました！ありがとうございました。");
+            if (isUnlimited) {
+                alert("精算完了しました！楽しい新年会になりますように！");
+            } else {
+                alert("精算完了しました！次回のオフ会で再見！");
+            }
             location.reload();
         } catch (e) { hideLoading(); alert("通信エラー"); }
     }
