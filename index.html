@@ -266,6 +266,17 @@
                 completedUsers.forEach(u => appendUserOption(group, u, true));
                 select.appendChild(group);
             }
+
+            // 【追加機能】最後に選んでいた名前があれば復元する
+            const lastName = localStorage.getItem('nyp2026_last_user');
+            if (lastName) {
+                const userExists = userMasterData.find(u => u.name === lastName && u.status !== "精算完了");
+                if (userExists) {
+                    select.value = lastName;
+                    checkUserStatus(); 
+                }
+            }
+
         } catch (e) { alert("名簿読み込み失敗"); }
         hideLoading();
     }
@@ -282,7 +293,10 @@
         const name = document.getElementById('user-select').value;
         if (!name) return;
         
-        // 保存データの復元 (100点の追加機能)
+        // 名前を保存 (100点の追加機能)
+        localStorage.setItem('nyp2026_last_user', name);
+
+        // 保存データの復元
         loadFromLocal(name);
 
         const user = userMasterData.find(u => u.name === name);
@@ -468,7 +482,8 @@
         showLoading();
         try {
             await fetch(GAS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, action: "complete" }) });
-            // ローカル保存を削除
+            // ローカル保存を完全に削除
+            localStorage.removeItem('nyp2026_last_user');
             localStorage.removeItem('nyp2026_cart_' + name);
             localStorage.removeItem('nyp2026_sent_' + name);
             hideLoading();
@@ -481,7 +496,7 @@
         } catch (e) { hideLoading(); alert("通信エラー"); }
     }
 
-    // LocalStorage 機能 (100点の追加)
+    // LocalStorage 機能
     function saveToLocal() {
         const name = document.getElementById('user-select').value;
         if(!name) return;
