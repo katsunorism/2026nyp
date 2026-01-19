@@ -364,17 +364,37 @@
     }
 
     function openConfirm() {
-        if (globalQty === 0) return alert("メニューを選択してください");
+        const currentSelectionTotal = globalTotal - sentItems.reduce((a, b) => a + b.price, 0);
+
+        // 1. 現在の選択も、過去の履歴も全くない場合（完全な初期状態）
+        if (globalQty === 0 && sentItems.length === 0) {
+            alert("メニューを選択してください");
+            return;
+        }
+
+        // 2. 履歴はあるが、現在の選択が0の場合（サイトに戻ってきた直後の精算）
+        if (globalQty === 0 && sentItems.length > 0) {
+            if (confirm("現在、新しく選択されているメニューはありません。\n送信済みの履歴から精算画面を表示しますか？")) {
+                setSummaryView(); // 直接、精算（サマリー）画面を表示
+            }
+            return;
+        }
+
+        // 3. 通常の注文送信前の確認画面構築
         let html = "以下の内容で注文を送信しますか？<br><div class='hr-line'></div>";
+        let hasSelection = false;
         Object.keys(cart).forEach(key => {
             if (cart[key] > 0) {
                 const parts = key.split('-');
                 const price = parseInt(parts.pop());
                 html += `・${parts.join('-')} × ${cart[key]} (${(price * cart[key]).toLocaleString()}円)<br>`;
+                hasSelection = true;
             }
         });
+        
         html += "<div class='hr-line'></div>";
-        html += "<strong>今回の送信分: " + (globalTotal - sentItems.reduce((a,b)=>a+b.price,0)).toLocaleString() + "円</strong>";
+        html += "<strong>今回の送信分: " + currentSelectionTotal.toLocaleString() + "円</strong>";
+        
         document.getElementById('confirm-body').innerHTML = html;
         document.getElementById('custom-confirm').style.display = 'flex';
     }
@@ -548,3 +568,4 @@
 </script>
 </body>
 </html>
+
