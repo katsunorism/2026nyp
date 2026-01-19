@@ -39,8 +39,13 @@
         .tab-all-items.active { color: #f39c12 !important; border-bottom-color: #f39c12 !important; }
 
         /* スクロールエリア */
-        .scrollable-content { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: 155px; padding-bottom: 180px; box-sizing: border-box; }
+        .scrollable-content { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: 155px; padding-bottom: 200px; box-sizing: border-box; }
         .container { max-width: 600px; margin: 0 auto; padding: 10px; display: none; }
+
+        /* 送信済み履歴ログ表示 */
+        #history-log { display: none; margin: 10px; padding: 12px; background: #1a1a1a; border-radius: 10px; border: 1px solid #333; }
+        .log-title { font-size: 0.75rem; color: #27ae60; font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid #333; padding-bottom: 4px; }
+        .log-item { display: flex; justify-content: space-between; font-size: 0.8rem; color: #bbb; margin-bottom: 4px; }
 
         /* 送信後画面（サマリー表示） */
         #summary-view { display: none; padding: 20px; background: #1f1f1f; border-radius: 15px; margin: 15px; border: 2px solid #27ae60; }
@@ -116,6 +121,11 @@
 </div>
 
 <div class="scrollable-content" id="scroll-area">
+    <div id="history-log">
+        <div class="log-title">送信済みの履歴</div>
+        <div id="log-list"></div>
+    </div>
+
     <div id="unlimited-panel" style="display:none; text-align:center; padding:40px 20px;">
         <h2 style="color:#27ae60;">飲み放題プラン</h2>
         <p style="color:#bbb; line-height:1.6;">会費：11,500円を支払い後、<br>下の「精算する」ボタンを押してください。</p>
@@ -131,7 +141,7 @@
 <div class="footer-result" id="footer-area" style="display:none;">
     <div id="price-display-area" class="result-info-container">
         <div id="qty-total-group">
-            <div style="font-size:0.65rem; color:#888;">合計 (<span id="current-qty">0</span>点)</div>
+            <div style="font-size:0.65rem; color:#888;">現在の選択 (<span id="current-qty">0</span>点)</div>
             <div style="font-size:1.1rem; font-weight:bold; color:#fff;"><span id="current-total">0</span>円</div>
         </div>
         <div id="diff-group" style="text-align:right;">
@@ -148,7 +158,7 @@
             <div id="post-final-result" class="diff-amount">0円</div>
         </div>
         <div class="post-buttons-row">
-            <button id="edit-btn" class="post-btn edit-btn" onclick="enableEdit()">修正</button>
+            <button id="edit-btn" class="post-btn edit-btn" onclick="enableEdit()">追加注文</button>
             <button id="settle-btn" class="post-btn settle-btn" onclick="settleComplete()">精算する</button>
         </div>
     </div>
@@ -179,7 +189,8 @@
         ]}
     ];
 
-    const cart = {};
+    let cart = {};
+    let sentItems = []; // 送信済み履歴
     let globalTotal = 0;
     let globalQty = 0;
     let userMasterData = [];
@@ -269,8 +280,12 @@
 
     function checkUserStatus() {
         const name = document.getElementById('user-select').value;
-        const user = userMasterData.find(u => u.name === name);
         if (!name) return;
+        
+        // 保存データの復元 (100点の追加機能)
+        loadFromLocal(name);
+
+        const user = userMasterData.find(u => u.name === name);
         const isUnlimited = user.isUnlimited;
         document.getElementById('unlimited-panel').style.display = isUnlimited ? 'block' : 'none';
         document.getElementById('menu-container').style.display = isUnlimited ? 'none' : 'block';
@@ -296,19 +311,26 @@
         if (cart[key] + chg < 0) return;
         cart[key] += chg;
         document.querySelectorAll(`[id="cnt-${key}"]`).forEach(el => el.textContent = cart[key]);
+        saveToLocal(); // 変更のたびに保存
         calc();
     }
 
     function calc() {
         globalTotal = 0; globalQty = 0;
+        // 現在の選択分を計算
         Object.keys(cart).forEach(key => {
             const price = parseInt(key.split('-').pop());
             globalTotal += price * cart[key];
             globalQty += cart[key];
         });
+        // 送信済み分を加算
+        sentItems.forEach(item => {
+            globalTotal += item.price;
+        });
+
         const bal = globalTotal - PREPAID_DRINK_BUDGET;
         
-        document.getElementById('current-total').textContent = globalTotal.toLocaleString();
+        document.getElementById('current-total').textContent = (globalTotal - sentItems.reduce((a,b)=>a+b.price,0)).toLocaleString();
         document.getElementById('current-qty').textContent = globalQty;
         
         const res = document.getElementById('final-result');
@@ -328,7 +350,7 @@
     }
 
     function openConfirm() {
-        if (globalTotal === 0) return alert("メニューを選択してください");
+        if (globalQty === 0) return alert("メニューを選択してください");
         let html = "以下の内容で注文を送信しますか？<br><div class='hr-line'></div>";
         Object.keys(cart).forEach(key => {
             if (cart[key] > 0) {
@@ -338,7 +360,7 @@
             }
         });
         html += "<div class='hr-line'></div>";
-        html += "<strong>合計金額: " + globalTotal.toLocaleString() + "円</strong>";
+        html += "<strong>今回の送信分: " + (globalTotal - sentItems.reduce((a,b)=>a+b.price,0)).toLocaleString() + "円</strong>";
         document.getElementById('confirm-body').innerHTML = html;
         document.getElementById('custom-confirm').style.display = 'flex';
     }
@@ -348,42 +370,75 @@
     async function executeSubmit() {
         closeConfirm();
         const name = document.getElementById('user-select').value;
+        const currentTotal = globalTotal - sentItems.reduce((a,b)=>a+b.price,0);
         const details = Object.keys(cart).filter(k => cart[k] > 0).map(k => k.split('-')[0] + "x" + cart[k]).join(", ");
+        
         showLoading();
         try {
-            await fetch(GAS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, details, total: globalTotal, action: "submit" }) });
+            await fetch(GAS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, details, total: currentTotal, action: "submit" }) });
+            
+            // 送信完了後：カートから履歴(sentItems)へ移動
+            Object.keys(cart).forEach(key => {
+                if (cart[key] > 0) {
+                    const price = parseInt(key.split('-').pop());
+                    const nameOnly = key.split('-')[0];
+                    for(let i=0; i<cart[key]; i++){
+                        sentItems.push({ name: nameOnly, price: price, time: new Date().toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit'}) });
+                    }
+                    cart[key] = 0;
+                    document.querySelectorAll(`[id="cnt-${key}"]`).forEach(el => el.textContent = 0);
+                }
+            });
+
+            saveToLocal();
+            renderHistory();
             setSummaryView();
             document.getElementById('scroll-area').scrollTop = 0;
             hideLoading();
         } catch (e) { hideLoading(); alert("送信失敗"); }
     }
 
+    function renderHistory() {
+        const logArea = document.getElementById('history-log');
+        const logList = document.getElementById('log-list');
+        if (sentItems.length === 0) {
+            logArea.style.display = 'none';
+            return;
+        }
+        logArea.style.display = 'block';
+        logList.innerHTML = sentItems.map(item => `
+            <div class="log-item">
+                <span>${item.name}</span>
+                <span>${item.time} (${item.price}円)</span>
+            </div>
+        `).join('');
+    }
+
     function setSummaryView() {
         const list = document.getElementById('summary-list');
-        list.innerHTML = '';
-        Object.keys(cart).forEach(key => {
-            if (cart[key] > 0) {
-                const parts = key.split('-');
-                const price = parseInt(parts.pop());
-                const div = document.createElement('div');
-                div.className = 'summary-item';
-                div.innerHTML = '<span>' + parts.join('-') + ' × ' + cart[key] + '</span><span>' + (price * cart[key]).toLocaleString() + '円</span>';
-                list.appendChild(div);
-            }
+        list.innerHTML = '<div style="font-size:0.8rem; color:#888; margin-bottom:10px;">送信済みの全アイテム</div>';
+        
+        // 履歴すべてを表示
+        sentItems.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'summary-item';
+            div.innerHTML = `<span>${item.name}</span><span>${item.price.toLocaleString()}円</span>`;
+            list.appendChild(div);
         });
+
         const totalLine = document.createElement('div');
         totalLine.className = 'summary-total-line';
-        totalLine.innerHTML = '<span>合計金額</span><span>' + globalTotal.toLocaleString() + '円</span>';
+        totalLine.innerHTML = '<span>総計</span><span>' + globalTotal.toLocaleString() + '円</span>';
         list.appendChild(totalLine);
 
         document.getElementById('menu-container').style.display = 'none';
         document.getElementById('tabs-nav').style.display = 'none';
+        document.getElementById('history-log').style.display = 'none';
         document.getElementById('summary-view').style.display = 'block';
         document.getElementById('user-select').disabled = true;
         
         document.getElementById('price-display-area').style.display = 'none';
         document.getElementById('submit-btn').style.display = 'none';
-        
         document.getElementById('post-submit-controls').style.display = 'flex';
         document.getElementById('post-status-label').style.display = 'block';
         document.getElementById('post-final-result').style.display = 'block';
@@ -395,6 +450,7 @@
         document.getElementById('menu-container').style.display = 'block';
         document.getElementById('tabs-nav').style.display = 'block';
         document.getElementById('user-select').disabled = false;
+        renderHistory();
         resetFooter();
     }
 
@@ -408,10 +464,13 @@
         const name = document.getElementById('user-select').value;
         const user = userMasterData.find(u => u.name === name);
         const isUnlimited = user ? user.isUnlimited : false;
-        if (!confirm("精算を完了し、終了しますか？")) return;
+        if (!confirm("精算を完了し、終了しますか？\n(スマホ内の記録もリセットされます)")) return;
         showLoading();
         try {
             await fetch(GAS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, action: "complete" }) });
+            // ローカル保存を削除
+            localStorage.removeItem('nyp2026_cart_' + name);
+            localStorage.removeItem('nyp2026_sent_' + name);
             hideLoading();
             if (isUnlimited) {
                 alert("精算完了しました！楽しい新年会になりますように！");
@@ -420,6 +479,44 @@
             }
             location.reload();
         } catch (e) { hideLoading(); alert("通信エラー"); }
+    }
+
+    // LocalStorage 機能 (100点の追加)
+    function saveToLocal() {
+        const name = document.getElementById('user-select').value;
+        if(!name) return;
+        localStorage.setItem('nyp2026_cart_' + name, JSON.stringify(cart));
+        localStorage.setItem('nyp2026_sent_' + name, JSON.stringify(sentItems));
+    }
+
+    function loadFromLocal(name) {
+        const savedCart = localStorage.getItem('nyp2026_cart_' + name);
+        const savedSent = localStorage.getItem('nyp2026_sent_' + name);
+        
+        // カートの復元
+        if(savedCart) {
+            cart = JSON.parse(savedCart);
+            Object.keys(cart).forEach(key => {
+                const els = document.querySelectorAll(`[id="cnt-${key}"]`);
+                els.forEach(el => el.textContent = cart[key]);
+            });
+        } else {
+            // 新規ユーザーまたは精算済みならリセット
+            Object.keys(cart).forEach(key => {
+                cart[key] = 0;
+                document.querySelectorAll(`[id="cnt-${key}"]`).forEach(el => el.textContent = 0);
+            });
+        }
+
+        // 送信済み履歴の復元
+        if(savedSent) {
+            sentItems = JSON.parse(savedSent);
+            renderHistory();
+        } else {
+            sentItems = [];
+            renderHistory();
+        }
+        calc();
     }
 
     function switchTab(idx) {
