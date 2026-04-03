@@ -93,6 +93,7 @@
     </style>
 </head>
 <body>
+
 <div id="loading-overlay"><div class="spinner"></div><div style="font-size:0.8rem; margin-top:10px;">通信中...</div></div>
 
 <div id="custom-confirm">
@@ -119,3 +120,329 @@
     </div>
     <div class="tabs-container" id="tabs-nav"></div>
 </div>
+
+<div class="scrollable-content" id="scroll-area">
+    <div id="history-log">
+        <div class="log-title">送信済みの履歴</div>
+        <div id="log-list"></div>
+    </div>
+
+    <div id="unlimited-panel" style="display:none; text-align:center; padding:40px 20px;">
+        <h2 style="color:#27ae60;">飲み放題プラン</h2>
+        <p style="color:#bbb; line-height:1.6;">会費：11,500円を支払い後、<br>下の「精算する」ボタンを押してください。</p>
+    </div>
+    <div id="summary-view">
+        <div class="summary-title">送信された注文内容</div>
+        <div id="summary-list"></div>
+        <div class="thanks-msg">内容に間違いがなければ、<br>下の「精算する」ボタンを押して終了してください。</div>
+    </div>
+    <div class="container" id="menu-container"></div>
+</div>
+
+<div class="footer-result" id="footer-area" style="display:none;">
+    <div id="price-display-area" class="result-info-container">
+        <div id="qty-total-group">
+            <div style="font-size:0.65rem; color:#888;">現在の選択 (<span id="current-qty">0</span>点)</div>
+            <div style="font-size:1.1rem; font-weight:bold; color:#fff;"><span id="current-total">0</span>円</div>
+        </div>
+        <div id="diff-group" style="text-align:right;">
+            <span id="status-label" style="font-size:0.65rem; color:#e67e22;">差額</span>
+            <div id="final-result" style="font-size:1.3rem; font-weight:bold;">0円</div>
+        </div>
+    </div>
+
+    <button id="submit-btn" class="submit-btn" onclick="openConfirm()">注文内容を送信する</button>
+    
+    <div id="post-submit-controls">
+        <div class="diff-display">
+            <span id="post-status-label" class="diff-label">追加支払い</span>
+            <div id="post-final-result" class="diff-amount">0円</div>
+        </div>
+        <div class="post-buttons-row">
+            <button id="edit-btn" class="post-btn edit-btn" onclick="enableEdit()">追加注文</button>
+            <button id="settle-btn" class="post-btn settle-btn" onclick="settleComplete()">精算する</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ※URLが最新のデプロイIDであることを確認してください
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwrfJjY0RfBfErd7CrWswQlqqn9hEPtUo-izmxr37EOfb6H3E6RcFqHdcWedBwTC6_8Fw/exec";
+    const PREPAID_DRINK_BUDGET = 2500;
+
+    const rawMenu = [
+        { tabName: "カイピリーニャ", groups: [
+            { label: "Caipirinha", items: [{name:"カイピリーニャ", price:1100}, {name:"プレミアム カイピリーニャ", price:1400}, {name:"泡盛カイピリーニャ", price:1100}]},
+            { label: "Fruit Caipirinha", items: [{name:"パイン&ジンジャー カイピリーニャ", price:1400}, {name:"トマト&ハラペーニョ カイピリーニャ", price:1400}, {name:"マラクジャ カイピリーニャ", price:1600}, {name:"トロピカル カイピリーニャ", price:1700}, {name:"ミックスベリー カイピリーニャ", price:1800}]}
+        ]},
+        { tabName: "ビール/サワー", groups: [
+            { label: "Brazilian Beer", items: [{name:"バルテンツァ", price:1600}, {name:"リコルディ", price:1600}]},
+            { label: "Beer", items: [{name:"生ビール(ハートランド)", price:980}, {name:"コロナ(メキシコ)", price:990}, {name:"ギネス", price:990}, {name:"キリン グリーンズフリー", price:700}]},
+            { label: "High Ball & Sour", items: [{name:"ニッカ フロンティアハイボール", price:1200}, {name:"富士ハイボール", price:1200}, {name:"山崎12年 ハイボール", price:2500}, {name:"レモンサワー", price:850}, {name:"マラクジャサワー", price:900}, {name:"マテ茶ハイ", price:850}]}
+        ]},
+        { tabName: "ワイン/他", groups: [
+            { label: "Wine", items: [{name:"ジュヴェ カンプス カヴァ(泡)", price:1300}, {name:"エラスリス ソーヴィニヨン ブラン(白)", price:1300}, {name:"ベティッグ ヴィーノデリージョン シャルドネ(白)", price:1300}, {name:"クロデフ ピノノワール(赤)", price:1300}, {name:"プレンタ ラフロール マルベック(赤)", price:1300}, {name:"ベティッグ ヴィーノ カベルネソーヴィニヨン(赤)", price:1300}]},
+            { label: "Brazilian Cocktails", items: [{name:"カシャーサトニック", price:900}, {name:"バッチーダデココ", price:1500}, {name:"バッチーダデマラクジャ", price:1500}]}
+        ]},
+        { tabName: "ノンアル/cafe", groups: [
+            { label: "Mocktails", items: [{name:"フォーシーズンズ カクテル", price:1200}, {name:"メアリーピックフォード", price:1200}, {name:"オリジナル トロピカルフルーツ", price:1200}]},
+            { label: "Soft Drink", items: [{name:"ガラナ アンタルチカ", price:700}, {name:"オレンジジュース", price:750}, {name:"マンゴージュース", price:700}, {name:"マラクジャジュース", price:750}, {name:"アサイ&バナナジュース", price:750}, {name:"グァヴァジュース", price:700}, {name:"カシュージュース", price:700}, {name:"マテ茶", price:700}, {name:"伊良コーラ", price:900}, {name:"黄金しょうがのジンジャーエール", price:900}, {name:"富士ミネラルウォーター", price:900}, {name:"富士プレミアムスパークリング", price:1000}, {name:"ペリエ", price:600}]},
+            { label: "Tea & Coffee", items: [{name:"ブレンドティー", price:550}, {name:"コーヒー", price:550}, {name:"カフェラテ", price:650}, {name:"カプチーノ", price:650}, {name:"エスプレッソ", price:550}, {name:"ダブルエスプレッソ", price:800}]}
+        ]}
+    ];
+
+    let cart = {};
+    let sentItems = [];
+    let globalTotal = 0;
+    let globalQty = 0;
+    let userMasterData = [];
+
+    window.onload = async () => {
+        initUI();
+        await fetchNames();
+    };
+
+    function initUI() {
+        const nav = document.getElementById('tabs-nav');
+        const container = document.getElementById('menu-container');
+        rawMenu.forEach((d, i) => {
+            addTab(nav, d.tabName, i);
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'tab-content'; contentDiv.id = `tab-content-${i}`;
+            buildMenuHtml(contentDiv, d.groups);
+            container.appendChild(contentDiv);
+        });
+        const allIdx = rawMenu.length;
+        addTab(nav, "メニュー一覧", allIdx, true);
+        const allContentDiv = document.createElement('div');
+        allContentDiv.className = 'tab-content'; allContentDiv.id = `tab-content-${allIdx}`;
+        rawMenu.forEach(d => buildMenuHtml(allContentDiv, d.groups));
+        container.appendChild(allContentDiv);
+        switchTab(0);
+    }
+
+    function addTab(nav, label, idx, isSpecial = false) {
+        const btn = document.createElement('div');
+        btn.className = 'tab';
+        if(isSpecial) btn.classList.add('tab-all-items');
+        btn.id = `tab-btn-${idx}`; btn.textContent = label;
+        btn.onclick = () => switchTab(idx);
+        nav.appendChild(btn);
+    }
+
+    function buildMenuHtml(parent, groups) {
+        groups.forEach(g => {
+            const subTitle = document.createElement('div');
+            subTitle.className = 'sub-category'; subTitle.textContent = g.label;
+            parent.appendChild(subTitle);
+            g.items.forEach(item => {
+                const key = `${item.name}-${item.price}`;
+                if(!(key in cart)) cart[key] = 0;
+                const div = document.createElement('div');
+                div.className = 'menu-item';
+                div.innerHTML = `
+                    <div><div class="item-name">${item.name}</div><div class="item-price">${item.price.toLocaleString()}円</div></div>
+                    <div class="controls">
+                        <button class="btn btn-minus" onclick="upd('${key}', -1)">-</button>
+                        <span class="count" id="cnt-${key}">${cart[key]}</span>
+                        <button class="btn btn-plus" onclick="upd('${key}', 1)">+</button>
+                    </div>`;
+                parent.appendChild(div);
+            });
+        });
+    }
+
+    async function fetchNames() {
+        showLoading();
+        try {
+            const res = await fetch(GAS_API_URL + "?action=getData");
+            userMasterData = await res.json();
+            const select = document.getElementById('user-select');
+            select.innerHTML = '<option value="">▼ 名前を選択してください</option>';
+            const activeUsers = userMasterData.filter(u => u.status !== "精算完了");
+            const completedUsers = userMasterData.filter(u => u.status === "精算完了");
+            activeUsers.forEach(u => appendUserOption(select, u, false));
+            if (completedUsers.length > 0) {
+                const group = document.createElement('optgroup');
+                group.label = "── 精算完了済み ──";
+                completedUsers.forEach(u => appendUserOption(group, u, true));
+                select.appendChild(group);
+            }
+            const lastName = localStorage.getItem('nyp2026_last_user');
+            if (lastName) {
+                const userExists = userMasterData.find(u => u.name === lastName && u.status !== "精算完了");
+                if (userExists) {
+                    select.value = lastName;
+                    checkUserStatus(); 
+                }
+            }
+        } catch (e) { alert("名簿読み込み失敗"); }
+        hideLoading();
+    }
+
+    function appendUserOption(parent, u, isDisabled) {
+        const opt = document.createElement('option');
+        opt.value = u.name;
+        opt.textContent = u.name + (u.isUnlimited ? " (飲み放題)" : "");
+        if (isDisabled) opt.disabled = true;
+        parent.appendChild(opt);
+    }
+
+    function checkUserStatus() {
+        const name = document.getElementById('user-select').value;
+        if (!name) return;
+        localStorage.setItem('nyp2026_last_user', name);
+        loadFromLocal(name);
+        const user = userMasterData.find(u => u.name === name);
+        const isUnlimited = user.isUnlimited;
+        document.getElementById('unlimited-panel').style.display = isUnlimited ? 'block' : 'none';
+        document.getElementById('menu-container').style.display = isUnlimited ? 'none' : 'block';
+        document.getElementById('tabs-nav').style.display = isUnlimited ? 'none' : 'block';
+        document.getElementById('footer-area').style.display = 'block';
+        document.getElementById('summary-view').style.display = 'none';
+        document.getElementById('user-select').disabled = false;
+        if (isUnlimited) {
+            document.getElementById('price-display-area').style.display = 'none';
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('post-submit-controls').style.display = 'flex';
+        } else {
+            resetFooter();
+            calc();
+        }
+    }
+
+    function upd(key, chg) {
+        if (cart[key] + chg < 0) return;
+        cart[key] += chg;
+        document.querySelectorAll(`[id="cnt-${key}"]`).forEach(el => el.textContent = cart[key]);
+        saveToLocal();
+        calc();
+    }
+
+    function calc() {
+        globalTotal = 0; globalQty = 0;
+        Object.keys(cart).forEach(key => {
+            const price = parseInt(key.split('-').pop());
+            globalTotal += price * cart[key];
+            globalQty += cart[key];
+        });
+        sentItems.forEach(item => { globalTotal += item.price; });
+        const bal = globalTotal - PREPAID_DRINK_BUDGET;
+        document.getElementById('current-total').textContent = (globalTotal - sentItems.reduce((a,b)=>a+b.price,0)).toLocaleString();
+        document.getElementById('current-qty').textContent = globalQty;
+        const res = document.getElementById('final-result');
+        const lbl = document.getElementById('status-label');
+        const postRes = document.getElementById('post-final-result');
+        if (bal > 0) {
+            res.textContent = "+" + bal.toLocaleString() + "円"; res.style.color = "#ff4d4d";
+            postRes.textContent = "+" + bal.toLocaleString() + "円";
+        } else {
+            res.textContent = Math.abs(bal).toLocaleString() + "円"; res.style.color = "#4dabff";
+            postRes.textContent = Math.abs(bal).toLocaleString() + "円";
+        }
+    }
+
+    function openConfirm() {
+        if (globalQty === 0 && sentItems.length === 0) { alert("メニューを選択してください"); return; }
+        if (globalQty === 0 && sentItems.length > 0) { setSummaryView(); return; }
+        let html = "以下の内容で送信しますか？<br><hr>";
+        Object.keys(cart).forEach(key => {
+            if (cart[key] > 0) html += `・${key.split('-')[0]} × ${cart[key]}<br>`;
+        });
+        document.getElementById('confirm-body').innerHTML = html;
+        document.getElementById('custom-confirm').style.display = 'flex';
+    }
+
+    function closeConfirm() { document.getElementById('custom-confirm').style.display = 'none'; }
+
+    async function executeSubmit() {
+        closeConfirm();
+        const name = document.getElementById('user-select').value;
+        showLoading();
+        try {
+            const details = Object.keys(cart).filter(k => cart[k] > 0).map(k => k.split('-')[0] + "x" + cart[k]).join(", ");
+            await fetch(GAS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, details, action: "submit" }) });
+            Object.keys(cart).forEach(key => {
+                if (cart[key] > 0) {
+                    const price = parseInt(key.split('-').pop());
+                    for(let i=0; i<cart[key]; i++) sentItems.push({ name: key.split('-')[0], price: price, time: new Date().toLocaleTimeString() });
+                    cart[key] = 0;
+                    document.querySelectorAll(`[id="cnt-${key}"]`).forEach(el => el.textContent = 0);
+                }
+            });
+            saveToLocal();
+            renderHistory();
+            setSummaryView();
+            hideLoading();
+        } catch (e) { hideLoading(); alert("送信失敗"); }
+    }
+
+    function renderHistory() {
+        const logArea = document.getElementById('history-log');
+        const logList = document.getElementById('log-list');
+        if (sentItems.length === 0) { logArea.style.display = 'none'; return; }
+        logArea.style.display = 'block';
+        logList.innerHTML = sentItems.map(item => `<div class="log-item"><span>${item.name}</span><span>${item.price}円</span></div>`).join('');
+    }
+
+    function setSummaryView() {
+        document.getElementById('menu-container').style.display = 'none';
+        document.getElementById('tabs-nav').style.display = 'none';
+        document.getElementById('summary-view').style.display = 'block';
+        document.getElementById('submit-btn').style.display = 'none';
+        document.getElementById('post-submit-controls').style.display = 'flex';
+        const list = document.getElementById('summary-list');
+        list.innerHTML = sentItems.map(i => `<div class="summary-item"><span>${i.name}</span><span>${i.price}円</span></div>`).join('');
+    }
+
+    function enableEdit() {
+        document.getElementById('summary-view').style.display = 'none';
+        document.getElementById('menu-container').style.display = 'block';
+        document.getElementById('tabs-nav').style.display = 'block';
+        resetFooter();
+    }
+
+    function resetFooter() {
+        document.getElementById('price-display-area').style.display = 'flex';
+        document.getElementById('submit-btn').style.display = 'block';
+        document.getElementById('post-submit-controls').style.display = 'none';
+    }
+
+    async function settleComplete() {
+        const name = document.getElementById('user-select').value;
+        if (!confirm("精算を完了しますか？")) return;
+        showLoading();
+        try {
+            await fetch(GAS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, action: "complete" }) });
+            localStorage.clear();
+            location.reload();
+        } catch (e) { hideLoading(); alert("通信エラー"); }
+    }
+
+    function saveToLocal() {
+        const name = document.getElementById('user-select').value;
+        if(!name) return;
+        localStorage.setItem('nyp2026_cart_' + name, JSON.stringify(cart));
+        localStorage.setItem('nyp2026_sent_' + name, JSON.stringify(sentItems));
+    }
+
+    function loadFromLocal(name) {
+        const savedCart = localStorage.getItem('nyp2026_cart_' + name);
+        const savedSent = localStorage.getItem('nyp2026_sent_' + name);
+        if(savedCart) cart = JSON.parse(savedCart);
+        if(savedSent) sentItems = JSON.parse(savedSent);
+        renderHistory();
+        calc();
+    }
+
+    function switchTab(idx) {
+        document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+        document.getElementById('tab-btn-' + idx)?.classList.add('active');
+        document.getElementById('tab-content-' + idx)?.classList.add('active');
+    }
+    function showLoading() { document.getElementById('loading-overlay').style.display = 'flex'; }
+    function hideLoading() { document.getElementById('loading-overlay').style.display = 'none'; }
+</script>
+</body>
+</html>
